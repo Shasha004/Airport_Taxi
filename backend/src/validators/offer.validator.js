@@ -4,6 +4,18 @@ const supplierEligibilityService = require('../services/supplierEligibility.serv
 const vehicleCapacityService = require('../services/vehicleCapacity.service');
 const availabilityService = require('../services/availability.service');
 
+const ALLOWED_EXPIRY_MINUTES = [5, 10, 15, 30, 60];
+
+function validateExpiryDuration(minutes) {
+  const value = Number(minutes);
+  if (!Number.isInteger(value) || !ALLOWED_EXPIRY_MINUTES.includes(value)) {
+    const err = new Error('Expiry must be 5, 10, 15, 30 or 60 minutes.');
+    err.statusCode = 400;
+    throw err;
+  }
+  return value;
+}
+
 function validateOfferPrice(price, minPrice, maxPrice) {
   const numPrice = Number(price);
   if (isNaN(numPrice) || price === '' || price === null || price === undefined) {
@@ -119,6 +131,8 @@ function validateOffer(request, supplierId, carId, price) {
 }
 
 module.exports = {
+  ALLOWED_EXPIRY_MINUTES,
+  validateExpiryDuration,
   validateOfferPrice,
   validateOffer,
 };

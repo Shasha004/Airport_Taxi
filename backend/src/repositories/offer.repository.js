@@ -9,12 +9,18 @@ function formatOffer(row) {
     carId: row.car_id,
     offerPrice: row.offer_price,
     status: row.status,
+    expiresAt: row.expires_at,
+    expiredAt: row.expired_at,
+    expiryMinutes: row.expiry_minutes,
     createdAt: row.created_at,
     // Database snake_case mirrors
     request_id: row.request_id,
     supplier_id: row.supplier_id,
     car_id: row.car_id,
     offer_price: row.offer_price,
+    expires_at: row.expires_at,
+    expired_at: row.expired_at,
+    expiry_minutes: row.expiry_minutes,
     created_at: row.created_at,
   };
 }
@@ -28,13 +34,18 @@ class OfferRepository {
     const carId = offer.carId || offer.car_id;
     const offerPrice = Number(offer.offerPrice ?? offer.offer_price);
     const status = offer.status || 'assigned';
+    const expiresAt = offer.expiresAt || offer.expires_at;
+    const expiredAt = offer.expiredAt || offer.expired_at || null;
+    const expiryMinutes = Number(offer.expiryMinutes ?? offer.expiry_minutes ?? 15);
 
     const stmt = db.prepare(`
-      INSERT INTO offers (id, request_id, supplier_id, car_id, offer_price, status)
-      VALUES (?, ?, ?, ?, ?, ?)
+      INSERT INTO offers (
+        id, request_id, supplier_id, car_id, offer_price, status,
+        expires_at, expired_at, expiry_minutes
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
-    stmt.run(id, requestId, supplierId, carId, offerPrice, status);
+    stmt.run(id, requestId, supplierId, carId, offerPrice, status, expiresAt, expiredAt, expiryMinutes);
     return this.findById(id);
   }
 
@@ -64,6 +75,28 @@ class OfferRepository {
     const stmt = db.prepare('UPDATE offers SET status = ? WHERE id = ?');
     stmt.run(status, id);
     return this.findById(id);
+  }
+
+  markExpired(id, now = new Date().toISOString()) {
+    const db = getDatabase();
+    const result = db.prepare(`
+      UPDATE offers
+      SET status = 'expired', expired_at = ?
+      WHERE id = ? AND status = 'assigned' AND expires_at <= ?
+    `).run(now, id, now);
+    return result.changes;
+  }
+
+  expireAssignedOffers(now = new Date().toISOString()) {
+    const db = getDatabase();
+    const result = db.prepare(`
+      UPDATE offers
+      SET status = 'expired', expired_at = ?
+      WHERE status = 'assigned'
+        AND expires_at IS NOT NULL
+        AND expires_at <= ?
+    `).run(now, now);
+    return result.changes;
   }
 
   markOtherOffersNotChosen(requestId, chosenOfferId) {

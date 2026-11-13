@@ -5,6 +5,13 @@ const { loadOpenRequests } = require('../data/loader');
 
 let db = null;
 
+function addColumnIfMissing(database, table, column, definition) {
+  const columns = database.prepare(`PRAGMA table_info(${table})`).all();
+  if (!columns.some(item => item.name === column)) {
+    database.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`);
+  }
+}
+
 function connectDatabase(dbPath) {
   if (db) return db;
 
@@ -77,9 +84,32 @@ function initializeDatabase(dbPath) {
       car_id TEXT NOT NULL,
       offer_price REAL NOT NULL,
       status TEXT DEFAULT 'assigned',
+      expires_at TEXT NOT NULL,
+      expired_at TEXT,
+      expiry_minutes INTEGER NOT NULL DEFAULT 15,
       created_at TEXT DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (request_id) REFERENCES ride_requests(id)
     );
+  `);
+
+  // Keep existing databases compatible and give old offers the 15-minute default.
+  addColumnIfMissing(database, 'offers', 'expires_at', 'TEXT');
+  addColumnIfMissing(database, 'offers', 'expired_at', 'TEXT');
+  addColumnIfMissing(database, 'offers', 'expiry_minutes', 'INTEGER');
+  database.exec(`
+    UPDATE offers
+    SET expiry_minutes = 15
+    WHERE expiry_minutes IS NULL OR expiry_minutes <= 0;
+
+    UPDATE offers
+    SET expires_at = COALESCE(
+      strftime(
+        '%Y-%m-%dT%H:%M:%fZ',
+        datetime(created_at, '+' || expiry_minutes || ' minutes')
+      ),
+      strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '+15 minutes')
+    )
+    WHERE expires_at IS NULL OR expires_at = '';
   `);
 
   // Table 3: bookings (Part 2)

@@ -41,9 +41,9 @@ export default function SupplierDashboard() {
     loadSuppliersList();
   }, []);
 
-  const loadDashboardData = async () => {
+  const loadDashboardData = async (silent = false) => {
     if (!selectedSupplierId) return;
-    setLoading(true);
+    if (!silent) setLoading(true);
     setError(null);
     try {
       const [supRes, chgRes] = await Promise.all([
@@ -55,12 +55,27 @@ export default function SupplierDashboard() {
     } catch (err) {
       setError(err.response?.data?.error || err.message || 'Failed to load supplier dashboard');
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   };
 
   useEffect(() => {
     loadDashboardData();
+  }, [selectedSupplierId]);
+
+  useEffect(() => {
+    const refreshVisibleDashboard = () => {
+      if (document.visibilityState === 'visible') {
+        loadDashboardData(true);
+      }
+    };
+    const intervalId = window.setInterval(refreshVisibleDashboard, 5000);
+    window.addEventListener('focus', refreshVisibleDashboard);
+
+    return () => {
+      window.clearInterval(intervalId);
+      window.removeEventListener('focus', refreshVisibleDashboard);
+    };
   }, [selectedSupplierId]);
 
   const handleReviewChange = async (changeRequestId, action) => {

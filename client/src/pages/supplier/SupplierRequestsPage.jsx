@@ -38,8 +38,8 @@ export default function SupplierRequestsPage() {
     loadSuppliers();
   }, []);
 
-  const loadRequests = async () => {
-    setLoading(true);
+  const loadRequests = async (silent = false) => {
+    if (!silent) setLoading(true);
     setError(null);
     try {
       const res = await supplierApi.getSupplierRequests(supplierId);
@@ -47,12 +47,27 @@ export default function SupplierRequestsPage() {
     } catch (err) {
       setError(err.response?.data?.error || err.message || 'Failed to load eligible requests');
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   };
 
   useEffect(() => {
     loadRequests();
+  }, [supplierId]);
+
+  useEffect(() => {
+    const refreshVisibleRequests = () => {
+      if (document.visibilityState === 'visible') {
+        loadRequests(true);
+      }
+    };
+    const intervalId = window.setInterval(refreshVisibleRequests, 5000);
+    window.addEventListener('focus', refreshVisibleRequests);
+
+    return () => {
+      window.clearInterval(intervalId);
+      window.removeEventListener('focus', refreshVisibleRequests);
+    };
   }, [supplierId]);
 
   const handleSupplierChange = (newId) => {

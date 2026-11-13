@@ -38,10 +38,18 @@ function carFitsLuggage(car, request) {
 
 function carMatchesType(car, request) {
   const preferredType = request.carType || request.car_type;
-  if (!preferredType || preferredType === '' || preferredType === 'null') {
+  if (!preferredType || preferredType === '' || preferredType === 'null' || preferredType === 'ANY') {
     return true; // No preference, any vehicle type fits
   }
-  return car.type && car.type.toUpperCase() === preferredType.toUpperCase();
+  const cleanPref = preferredType.toUpperCase();
+  const cleanCar = car.type ? car.type.toUpperCase() : '';
+  if (cleanCar === cleanPref) return true;
+
+  // Higher or equal tier vehicles (e.g. SUV or BUS when SEDAN is preferred) satisfy passenger requirements
+  const TIER = { HATCHBACK: 1, SEDAN: 2, SUV: 3, BUS: 4 };
+  const carTier = TIER[cleanCar] || 0;
+  const prefTier = TIER[cleanPref] || 0;
+  return carTier >= prefTier;
 }
 
 function validateCarCapacity(car, request) {

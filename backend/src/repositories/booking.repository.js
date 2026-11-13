@@ -59,10 +59,43 @@ class BookingRepository {
     return formatBooking(row);
   }
 
-  saveBookingTransaction(booking, offerId, requestId) {
+  saveBookingTransaction(booking, offerId, requestId, now = new Date().toISOString()) {
     const db = getDatabase();
 
     const transaction = db.transaction(() => {
+      const offer = db.prepare('SELECT status, expires_at FROM offers WHERE id = ?').get(offerId);
+      if (!offer) {
+        return { error: 'not_found' };
+      }
+      if (offer.status !== 'assigned') {
+        return { error: 'unavailable', status: offer.status };
+      }
+
+      const expiryTime = Date.parse(offer.expires_at);
+      const currentTime = Date.parse(now);
+      if (!Number.isFinite(expiryTime) || !Number.isFinite(currentTime) || expiryTime <= currentTime) {
+        db.prepare(`
+          UPDATE offers
+          SET status = 'expired', expired_at = ?
+          WHERE id = ? AND status = 'assigned'
+        `).run(now, offerId);
+        return { error: 'expired' };
+      }
+
+      const request = db.prepare('SELECT status FROM ride_requests WHERE id = ?').get(requestId);
+      if (!request || request.status !== 'open') {
+        return { error: 'request_unavailable', status: request?.status };
+      }
+
+      const claim = db.prepare(`
+        UPDATE offers
+        SET status = 'booked'
+        WHERE id = ? AND status = 'assigned' AND expires_at > ?
+      `).run(offerId, now);
+      if (claim.changes !== 1) {
+        return { error: 'expired' };
+      }
+
       // 1. Insert booking
       db.prepare(`
         INSERT INTO bookings (
@@ -87,21 +120,38 @@ class BookingRepository {
         status: booking.status || 'confirmed',
       });
 
-      // 2. Mark this offer as booked
-      db.prepare("UPDATE offers SET status = 'booked' WHERE id = ?").run(offerId);
+      // Expire competing offers before marking the remaining active ones not chosen.
+      db.prepare(`
+        UPDATE offers
+        SET status = 'expired', expired_at = ?
+        WHERE request_id = ? AND status = 'assigned' AND expires_at <= ?
+      `).run(now, requestId, now);
 
-      // 3. Mark other assigned offers for this request as not_chosen
       db.prepare(`
         UPDATE offers
         SET status = 'not_chosen'
-        WHERE request_id = ? AND id != ? AND status = 'assigned'
-      `).run(requestId, offerId);
+        WHERE request_id = ? AND id != ? AND status = 'assigned' AND expires_at > ?
+      `).run(requestId, offerId, now);
 
-      // 4. Update request status to booked
+      // Update the request in the same transaction as the booking and offer.
       db.prepare("UPDATE ride_requests SET status = 'booked' WHERE id = ?").run(requestId);
+      return { success: true };
     });
 
-    transaction();
+    const result = transaction.immediate();
+    if (result?.error) {
+      const messages = {
+        not_found: ['Offer not found.', 404],
+        unavailable: [`Offer is no longer available (status: ${result.status}).`, 409],
+        expired: ['This offer has expired and cannot be booked.', 409],
+        request_unavailable: [`Ride request is no longer open (status: ${result.status || 'not found'}).`, 409],
+      };
+      const [message, statusCode] = messages[result.error];
+      const err = new Error(message);
+      err.statusCode = statusCode;
+      throw err;
+    }
+
     return this.findById(booking.id);
   }
 
@@ -134,4 +184,3 @@ class BookingRepository {
 }
 
 module.exports = new BookingRepository();
-

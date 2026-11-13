@@ -1,18 +1,14 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useSearchParams, useNavigate, Link } from 'react-router-dom';
 import {
   ArrowLeft,
   Car,
-  Plane,
-  Building,
   CheckCircle,
   AlertCircle,
   RefreshCw,
   Send,
   IndianRupee,
   Clock,
-  Briefcase,
-  Users,
 } from 'lucide-react';
 import { rideRequestApi, catalogApi, offerApi } from '../../api/api';
 
@@ -28,6 +24,7 @@ export default function CreateOfferPage() {
   const [supplierId, setSupplierId] = useState(initialSupplierId);
   const [carId, setCarId] = useState('');
   const [offerPrice, setOfferPrice] = useState('');
+  const [expiryMinutes, setExpiryMinutes] = useState(15);
 
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -68,12 +65,15 @@ export default function CreateOfferPage() {
   const reqCarType = request?.carType ? request.carType.toUpperCase() : null;
 
   // Helper function to check vehicle capacity compliance with R5
-  const checkVehicleCapacity = (car) => {
+  const checkVehicleCapacity = useCallback((car) => {
     if (!car || !request) return { eligible: true, seatOk: true, largeOk: true, smallOk: true, typeOk: true, reasons: [] };
     const seatOk = Number(car.seats || 0) >= totalPassengers;
     const largeOk = Number(car.large_bags || 0) >= reqLargeBags;
     const smallOk = Number(car.small_bags || 0) >= reqSmallBags;
-    const typeOk = !reqCarType || (car.type && car.type.toUpperCase() === reqCarType);
+    const typeTier = { HATCHBACK: 1, SEDAN: 2, SUV: 3, BUS: 4 };
+    const carType = car.type?.toUpperCase();
+    const typeOk = !reqCarType || reqCarType === 'ANY' ||
+      (carType && (carType === reqCarType || (typeTier[carType] || 0) >= (typeTier[reqCarType] || 0)));
 
     const reasons = [];
     if (!seatOk) reasons.push(`Seats: ${car.seats} < ${totalPassengers} needed`);
@@ -89,7 +89,7 @@ export default function CreateOfferPage() {
       typeOk,
       reasons
     };
-  };
+  }, [request, reqCarType, reqLargeBags, reqSmallBags, totalPassengers]);
 
   // Automatically select the first eligible vehicle whenever supplier or request changes
   useEffect(() => {
@@ -101,7 +101,7 @@ export default function CreateOfferPage() {
         setCarId(activeSupplier.vehicles[0].vehicle_id);
       }
     }
-  }, [supplierId, activeSupplier, request]);
+  }, [supplierId, activeSupplier, request, checkVehicleCapacity]);
 
   const selectedCar = activeSupplier?.vehicles?.find(c => c.vehicle_id === carId);
   const selectedCarCap = checkVehicleCapacity(selectedCar);
@@ -135,10 +135,11 @@ export default function CreateOfferPage() {
         supplierId,
         carId,
         price: Number(offerPrice),
+        expiryMinutes,
       };
 
       await offerApi.createOffer(requestId, payload);
-      navigate(`/supplier/requests?supplierId=${supplierId}`);
+      navigate(`/traveler/offers/${requestId}`);
     } catch (err) {
       submitLockRef.current = false;
       setError(err.response?.data?.error || err.message || 'Failed to submit offer');
@@ -380,6 +381,29 @@ export default function CreateOfferPage() {
               )}
             </div>
           )}
+        </div>
+
+        <div className="form-section">
+          <h2 className="section-title">
+            <Clock size={20} />
+            <span>Offer Validity</span>
+          </h2>
+          <p className="section-desc">
+            The traveler must book before the offer expires. The backend enforces this deadline.
+          </p>
+          <div className="form-group">
+            <label htmlFor="expiryMinutes">Offer remains valid for</label>
+            <select
+              id="expiryMinutes"
+              className="input-field"
+              value={expiryMinutes}
+              onChange={(e) => setExpiryMinutes(Number(e.target.value))}
+            >
+              {[5, 10, 15, 30, 60].map((minutes) => (
+                <option key={minutes} value={minutes}>{minutes} minutes</option>
+              ))}
+            </select>
+          </div>
         </div>
 
         <div className="form-section">

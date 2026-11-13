@@ -1,14 +1,10 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import {
   Car,
-  Plane,
-  Building,
   CheckCircle,
   XCircle,
   Clock,
-  Users,
-  Briefcase,
   IndianRupee,
   ArrowLeft,
   RefreshCw,
@@ -18,9 +14,9 @@ import {
   SlidersHorizontal,
   ArrowUpDown,
   RotateCcw,
-  Sparkles,
 } from 'lucide-react';
 import { offerApi, rideRequestApi, bookingApi } from '../../api/api';
+import OfferCountdown from '../../components/OfferCountdown';
 
 export default function OffersPage() {
   const { requestId } = useParams();
@@ -28,6 +24,7 @@ export default function OffersPage() {
 
   const [request, setRequest] = useState(null);
   const [offers, setOffers] = useState([]);
+  const [expiredOfferIds, setExpiredOfferIds] = useState(() => new Set());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [actionLoading, setActionLoading] = useState(null);
@@ -38,8 +35,8 @@ export default function OffersPage() {
   const [sortBy, setSortBy] = useState('price-asc'); // 'price-asc', 'price-desc', 'rating-desc', 'default'
   const [statusFilter, setStatusFilter] = useState('ALL');
 
-  const loadData = async () => {
-    setLoading(true);
+  const loadData = useCallback(async (silent = false) => {
+    if (!silent) setLoading(true);
     setError(null);
     try {
       const [reqRes, offersRes] = await Promise.all([
@@ -61,13 +58,28 @@ export default function OffersPage() {
     } catch (err) {
       setError(err.response?.data?.error || err.message || 'Failed to load offers');
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
-  };
+  }, [requestId]);
 
   useEffect(() => {
     loadData();
-  }, [requestId]);
+  }, [loadData]);
+
+  useEffect(() => {
+    const refreshVisibleOffers = () => {
+      if (document.visibilityState === 'visible') {
+        loadData(true);
+      }
+    };
+    const intervalId = window.setInterval(refreshVisibleOffers, 5000);
+    window.addEventListener('focus', refreshVisibleOffers);
+
+    return () => {
+      window.clearInterval(intervalId);
+      window.removeEventListener('focus', refreshVisibleOffers);
+    };
+  }, [loadData]);
 
   const handleBook = async (offerId) => {
     if (!window.confirm('Are you sure you want to book this taxi offer?')) return;
@@ -197,7 +209,7 @@ export default function OffersPage() {
               Review taxi offers submitted by eligible suppliers and book your preferred vehicle.
             </p>
           </div>
-          <button className="btn-secondary" onClick={loadData} disabled={loading}>
+          <button className="btn-secondary" onClick={() => loadData()} disabled={loading}>
             <RefreshCw size={16} className={loading ? 'spin' : ''} />
             <span>Refresh Offers</span>
           </button>
@@ -368,8 +380,10 @@ export default function OffersPage() {
                 >
                   <option value="ALL">All Statuses ({offers.length})</option>
                   <option value="assigned">Available to Book</option>
+                  <option value="expired">Expired</option>
                   <option value="booked">Booked</option>
                   <option value="rejected">Rejected</option>
+                  <option value="not_chosen">Not Chosen</option>
                 </select>
               </div>
             </div>
@@ -382,7 +396,7 @@ export default function OffersPage() {
             <h3>No Offers Submitted Yet</h3>
             <p>Suppliers are reviewing this request. Check back shortly or assign an offer in the Supplier Portal.</p>
             <div style={{ marginTop: '1rem', display: 'flex', gap: '0.75rem' }}>
-              <button className="btn-secondary" onClick={loadData}>
+              <button className="btn-secondary" onClick={() => loadData()}>
                 <RefreshCw size={16} />
                 <span>Check Again</span>
               </button>
@@ -411,13 +425,16 @@ export default function OffersPage() {
         ) : (
           <div className="offers-grid">
             {filteredOffers.map((offer) => {
-              const isAssigned = offer.status === 'assigned';
+              const isExpired = offer.status === 'expired' ||
+                (offer.status === 'assigned' && expiredOfferIds.has(offer.id));
+              const isAssigned = offer.status === 'assigned' && !isExpired;
               const isBooked = offer.status === 'booked';
               const isRejected = offer.status === 'rejected';
               const isNotChosen = offer.status === 'not_chosen';
+              const displayStatus = isExpired ? 'expired' : offer.status;
 
               return (
-                <div key={offer.id} className={`offer-card status-border-${offer.status}`}>
+                <div key={offer.id} className={`offer-card status-border-${displayStatus}`}>
                   <div className="offer-header">
                     <div>
                       <h3 className="supplier-name">{offer.supplier?.name || offer.supplierId}</h3>
@@ -429,8 +446,8 @@ export default function OffersPage() {
                         <span className="car-id-tag">{offer.carId}</span>
                       </div>
                     </div>
-                    <span className={`status-pill status-${offer.status}`}>
-                      {offer.status.toUpperCase()}
+                    <span className={`status-pill status-${displayStatus}`}>
+                      {displayStatus.toUpperCase()}
                     </span>
                   </div>
 
@@ -448,6 +465,28 @@ export default function OffersPage() {
                       <span>{offer.car?.large_bags || 2} Large, {offer.car?.small_bags || 2} Small</span>
                     </div>
                   </div>
+
+                  {offer.expiresAt && (isAssigned || isExpired) && (
+                    <div className="vehicle-details-card">
+                      <div className="v-row">
+                        <span className="v-lbl">Offer validity:</span>
+                        <strong>
+                          <OfferCountdown
+                            expiresAt={offer.expiresAt}
+                            onExpire={() => {
+                              setExpiredOfferIds(current => {
+                                if (current.has(offer.id)) return current;
+                                const next = new Set(current);
+                                next.add(offer.id);
+                                return next;
+                              });
+                              loadData(true);
+                            }}
+                          />
+                        </strong>
+                      </div>
+                    </div>
+                  )}
 
                   <div className="offer-price-block">
                     <span className="offer-price-lbl">Offered Total Price:</span>
@@ -481,6 +520,13 @@ export default function OffersPage() {
                       <div className="offer-status-note booked">
                         <CheckCircle size={18} />
                         <span>Booked by traveler</span>
+                      </div>
+                    )}
+
+                    {isExpired && (
+                      <div className="offer-status-note rejected">
+                        <Clock size={18} />
+                        <span>This offer expired and can no longer be booked.</span>
                       </div>
                     )}
 

@@ -5,6 +5,7 @@ const rideRequestRepo = require('../repositories/rideRequest.repository');
 const catalogService = require('./catalog.service');
 const routePricingService = require('./routePricing.service');
 const availabilityService = require('./availability.service');
+const offerExpiryService = require('./offerExpiry.service');
 
 class BookingService {
   generateUniqueBookingNumber() {
@@ -21,11 +22,24 @@ class BookingService {
     return `${Date.now()}`.slice(-10);
   }
 
-  bookOffer(offerId) {
+  bookOffer(offerId, now = new Date()) {
+    const bookingTime = new Date(now).toISOString();
+    offerExpiryService.expireOffers(bookingTime);
+
     const offer = offerRepo.findById(offerId);
     if (!offer) {
       const err = new Error(`Offer with ID "${offerId}" not found.`);
       err.statusCode = 404;
+      throw err;
+    }
+
+    const expiryTime = Date.parse(offer.expiresAt);
+    if (offer.status === 'expired' || (offer.status === 'assigned' && (
+      !Number.isFinite(expiryTime) || expiryTime <= Date.parse(bookingTime)
+    ))) {
+      offerRepo.markExpired(offerId, bookingTime);
+      const err = new Error('This offer has expired and cannot be booked.');
+      err.statusCode = 409;
       throw err;
     }
 
@@ -96,7 +110,7 @@ class BookingService {
       status: 'confirmed',
     };
 
-    const saved = bookingRepo.saveBookingTransaction(newBookingRecord, offer.id, request.id);
+    const saved = bookingRepo.saveBookingTransaction(newBookingRecord, offer.id, request.id, bookingTime);
     return this.enrichBooking(saved);
   }
 

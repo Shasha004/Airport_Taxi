@@ -2,9 +2,13 @@ const offerRepo = require('../repositories/offer.repository');
 const rideRequestRepo = require('../repositories/rideRequest.repository');
 const catalogService = require('./catalog.service');
 const offerValidator = require('../validators/offer.validator');
+const offerExpiryService = require('./offerExpiry.service');
 
 class OfferService {
-  assignCarAndPrice(requestId, supplierId, carId, price) {
+  assignCarAndPrice(requestId, supplierId, carId, price, expiryMinutes = 15, now = new Date()) {
+    const validExpiryMinutes = offerValidator.validateExpiryDuration(expiryMinutes);
+    offerExpiryService.expireOffers(now);
+
     const request = rideRequestRepo.findById(requestId);
     if (!request) {
       const err = new Error(`Ride request with ID "${requestId}" not found.`);
@@ -14,6 +18,7 @@ class OfferService {
 
     // Run complete R4, R5, R6, R7 validations
     const validated = offerValidator.validateOffer(request, supplierId, carId, price);
+    const expiresAt = offerExpiryService.calculateExpiryTime(validExpiryMinutes, now);
 
     // Idempotency check: if this supplier already has an assigned offer for this request+car, return existing
     // (prevents duplicate offers when supplier clicks submit multiple times)
@@ -36,6 +41,8 @@ class OfferService {
       carId,
       offerPrice: validated.price,
       status: 'assigned',
+      expiresAt,
+      expiryMinutes: validExpiryMinutes,
     };
 
     const saved = offerRepo.create(newOffer);
@@ -43,12 +50,14 @@ class OfferService {
   }
 
   getOfferById(offerId) {
+    offerExpiryService.expireOffers();
     const offer = offerRepo.findById(offerId);
     if (!offer) return null;
     return this.enrichOffer(offer);
   }
 
   listOffersForRequest(requestId) {
+    offerExpiryService.expireOffers();
     const offers = offerRepo.findByRequestId(requestId);
     // Deduplicate any identical offers from multiple rapid clicks
     const seen = new Set();
@@ -64,11 +73,13 @@ class OfferService {
   }
 
   listOffersForSupplier(supplierId) {
+    offerExpiryService.expireOffers();
     const offers = offerRepo.findBySupplierId(supplierId);
     return offers.map(o => this.enrichOffer(o));
   }
 
   rejectOffer(offerId) {
+    offerExpiryService.expireOffers();
     const offer = offerRepo.findById(offerId);
     if (!offer) {
       const err = new Error(`Offer with ID "${offerId}" not found.`);

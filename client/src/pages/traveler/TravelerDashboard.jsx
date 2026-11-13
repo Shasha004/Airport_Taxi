@@ -54,8 +54,8 @@ export default function TravelerDashboard() {
   const [delayModalError, setDelayModalError] = useState(null);
   const [delayModalSuccess, setDelayModalSuccess] = useState(null);
 
-  const fetchRequests = async () => {
-    setLoading(true);
+  const fetchRequests = async (silent = false) => {
+    if (!silent) setLoading(true);
     setError(null);
     try {
       const params = filter === 'open' ? { status: 'open' } : {};
@@ -95,12 +95,27 @@ export default function TravelerDashboard() {
     } catch (err) {
       setError(err.response?.data?.error || err.message || 'Failed to load ride requests');
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   };
 
   useEffect(() => {
     if (travelerName || travelerId) fetchRequests();
+  }, [filter, travelerName, travelerId]);
+
+  useEffect(() => {
+    const refreshVisibleRequests = () => {
+      if (document.visibilityState === 'visible' && (travelerName || travelerId)) {
+        fetchRequests(true);
+      }
+    };
+    const intervalId = window.setInterval(refreshVisibleRequests, 5000);
+    window.addEventListener('focus', refreshVisibleRequests);
+
+    return () => {
+      window.clearInterval(intervalId);
+      window.removeEventListener('focus', refreshVisibleRequests);
+    };
   }, [filter, travelerName, travelerId]);
 
   const handleSwitchUser = () => {

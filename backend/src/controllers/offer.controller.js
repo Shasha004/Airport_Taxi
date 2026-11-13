@@ -4,16 +4,23 @@ class OfferController {
   createOffer(req, res, next) {
     try {
       const { requestId } = req.params;
-      const { supplierId, carId, price } = req.body;
+      const { supplierId, carId, price, expiryMinutes } = req.body;
+      const offerPrice = price ?? req.body.offerPrice;
 
-      if (!supplierId || !carId || price === undefined) {
+      if (!supplierId || !carId || offerPrice === undefined) {
         return res.status(400).json({
           success: false,
           error: 'Missing required offer fields: supplierId, carId, and price are required.',
         });
       }
 
-      const offer = offerService.assignCarAndPrice(requestId, supplierId, carId, price);
+      const offer = offerService.assignCarAndPrice(
+        requestId,
+        supplierId,
+        carId,
+        offerPrice,
+        expiryMinutes === undefined ? 15 : expiryMinutes
+      );
       res.status(201).json({
         success: true,
         message: 'Offer submitted successfully',
@@ -60,4 +67,3 @@ class OfferController {
 }
 
 module.exports = new OfferController();
-
