@@ -360,3 +360,154 @@
     grid-template-columns: 1fr 1fr;
   }
 }
+
+
+/* --------------------------------------------------------------------------
+   ROLE TABS & CABOWNER STYLES (MONOCHROME LUXURY)
+   -------------------------------------------------------------------------- */
+
+.modal-role-tabs {
+  display: flex;
+  background: rgba(255, 255, 255, 0.04);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 0 30px;
+  gap: 16px;
+}
+
+.modal-role-tab {
+  padding: 14px 20px;
+  background: transparent;
+  border: none;
+  font-family: var(--font-heading);
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #888888;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.25s ease;
+}
+
+.modal-role-tab:hover {
+  color: #ffffff;
+}
+
+.modal-role-tab--active {
+  color: #ffffff !important;
+  font-weight: 700;
+}
+
+.modal-role-tab--active::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 100%;
+  height: 2.5px;
+  background: #ffffff;
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
+}
+
+.supplier-card-noir {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 10px;
+  padding: 16px 20px;
+}
+
+.supplier-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.supplier-name {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.supplier-status-badge {
+  font-size: 0.8rem;
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.15);
+  padding: 3px 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.supplier-specs-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  font-size: 0.84rem;
+  color: #cccccc;
+}
+
+.request-card-noir {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-left: 4px solid #ffffff;
+  border-radius: 8px;
+  padding: 14px 18px;
+}
+
+.request-badge-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.request-code {
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  color: #ffffff;
+}
+
+.request-tag {
+  font-size: 0.76rem;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 2px 8px;
+  border-radius: 4px;
+  color: #e2e8f0;
+}
+
+.request-desc {
+  font-size: 0.86rem;
+  color: #cccccc;
+  line-height: 1.45;
+  margin: 6px 0 10px;
+}
+
+.request-pricing-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.88rem;
+  color: #ffffff;
+}
+
+.request-price {
+  font-size: 1.15rem;
+  color: #ffffff;
+  font-weight: 800;
+}
+
+.request-route-band {
+  font-size: 0.76rem;
+  color: #94a3b8;
+}
+
+.busy-window-preview,
+.policy-note {
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 8px;
+  font-size: 0.88rem;
+  color: #ffffff;
+}

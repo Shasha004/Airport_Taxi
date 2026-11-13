@@ -8,10 +8,14 @@ import '../css/Landing.css';
 /**
  * Main Landing Page Component (AirportCarWala).
  * Black and White Luxury Noir Theme:
+ * - Top Navbar: Brand logo on left, strictly "Traveller" and "Cabowner" buttons in center
  * - Left (50%): Signature "Awesome" script font styling, subtitle, *SPECS, and Book Now
  * - Right (50%): Big size 3D rotating supercar video in high-contrast monochrome silver & black!
  */
 function Landing() {
+  // Active role selected in the navbar: 'traveller' or 'cabowner'
+  const [activeRole, setActiveRole] = useState('traveller');
+
   // Controls the Hackathon Problem 2 Booking & Rules modal
   const [isBookingOpen, setIsBookingOpen] = useState(false);
 
@@ -19,6 +23,12 @@ function Landing() {
   const [activeSlide, setActiveSlide] = useState(2);
 
   const mainVideoRef = useRef(null);
+
+  // Handle role selection from Navbar
+  const handleRoleSelect = (role) => {
+    setActiveRole(role);
+    setIsBookingOpen(true);
+  };
 
   // Specs list for interactive carousel
   const specsList = [
@@ -69,9 +79,10 @@ function Landing() {
           MAIN PAGE (50 / 50 BLACK & WHITE LUXURY SPLIT)
           ==================================================================== */}
       <main className="main-stage">
-        {/* Top Navbar */}
+        {/* Top Navbar with Traveller & Cabowner buttons */}
         <Navbar 
-          onBookNowClick={() => setIsBookingOpen(true)}
+          activeRole={activeRole}
+          onRoleSelect={handleRoleSelect}
         />
 
         {/* 50 / 50 Hero Split Grid */}
@@ -79,15 +90,28 @@ function Landing() {
           <div className="hero-split__container">
             {/* ================= LEFT 50%: ALL TEXT & SPECS ================= */}
             <div className="hero-split__left">
-              <span className="hero-split__eyebrow">Luxury Car Rentals</span>
+              <span className="hero-split__eyebrow">
+                {activeRole === 'cabowner' ? 'Cab Owner & Fleet Partner' : 'Luxury Car Rentals'}
+              </span>
               
               <h1 className="hero-split__title font-awesome-style">
-                Luxury Car<br />
-                Rentals
+                {activeRole === 'cabowner' ? (
+                  <>
+                    Cabowner<br />
+                    Portal
+                  </>
+                ) : (
+                  <>
+                    Luxury Car<br />
+                    Rentals
+                  </>
+                )}
               </h1>
 
               <p className="hero-split__subtitle">
-                FIND THE PERFECT CAR FOR YOUR NEXT AIRPORT TRIP!
+                {activeRole === 'cabowner' 
+                  ? 'DISCOVER VERIFIED AIRPORT RIDE OFFERS & INSTANT BOOKINGS!'
+                  : 'FIND THE PERFECT CAR FOR YOUR NEXT AIRPORT TRIP!'}
               </p>
 
               {/* Specs Block integrated on the left */}
@@ -120,7 +144,7 @@ function Landing() {
                   className="hero-btn-book"
                   onClick={() => setIsBookingOpen(true)}
                 >
-                  <span>BOOK NOW</span>
+                  <span>{activeRole === 'cabowner' ? 'CABOWNER PORTAL' : 'BOOK NOW'}</span>
                   <span className="hero-btn-arrow">&#9654;</span>
                 </button>
               </div>
@@ -156,6 +180,8 @@ function Landing() {
       <BookingModal 
         isOpen={isBookingOpen}
         onClose={() => setIsBookingOpen(false)}
+        activeRole={activeRole}
+        onRoleChange={setActiveRole}
       />
     </div>
   );

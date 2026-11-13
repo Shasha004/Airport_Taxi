@@ -2,15 +2,15 @@ import React from 'react';
 import '../css/Navbar.css';
 
 /**
- * Navbar Component matching Image 2 (AirportCarWala).
- * Header items: Logo with airplane over car, nav links, and hamburger menu.
+ * Navbar Component (Black & White Theme).
+ * Brand Logo on the left, "Traveller" and "Cabowner" role navigation in the center.
  */
-function Navbar({ onBookNowClick }) {
+function Navbar({ activeRole = 'traveller', onRoleSelect }) {
   return (
     <header className="navbar">
       <div className="navbar__container">
         {/* Brand Logo: Plane above Car outline */}
-        <div className="navbar__brand">
+        <div className="navbar__brand" onClick={() => onRoleSelect && onRoleSelect('traveller')}>
           <div className="navbar__logo-icon">
             <svg viewBox="0 0 54 36" fill="none" xmlns="http://www.w3.org/2000/svg">
               {/* Airplane taking off angled to the right */}
@@ -34,15 +34,24 @@ function Navbar({ onBookNowClick }) {
           <span className="navbar__brand-name">AirportCarWala</span>
         </div>
 
-        {/* Center Nav Links matching Image 2 */}
-        <nav className="navbar__nav">
-          <a href="#home" className="navbar__link">Home</a>
-          <a href="#cars" className="navbar__link navbar__link--active">Cars</a>
-          <button type="button" onClick={onBookNowClick} className="navbar__link navbar__link--btn">
-            Bookings
+        {/* Center Nav: Replaced old 5 links with strictly "Traveller" and "Cabowner" */}
+        <nav className="navbar__nav" aria-label="Main Navigation">
+          <button 
+            type="button" 
+            onClick={() => onRoleSelect && onRoleSelect('traveller')} 
+            className={`navbar__link navbar__link--btn ${activeRole === 'traveller' ? 'navbar__link--active' : ''}`}
+            aria-current={activeRole === 'traveller' ? 'page' : undefined}
+          >
+            Traveller
           </button>
-          <a href="#about" className="navbar__link" onClick={onBookNowClick}>About</a>
-          <a href="#contact" className="navbar__link" onClick={onBookNowClick}>Contact Us</a>
+          <button 
+            type="button" 
+            onClick={() => onRoleSelect && onRoleSelect('cabowner')} 
+            className={`navbar__link navbar__link--btn ${activeRole === 'cabowner' ? 'navbar__link--active' : ''}`}
+            aria-current={activeRole === 'cabowner' ? 'page' : undefined}
+          >
+            Cabowner
+          </button>
         </nav>
 
         {/* Right side: Hamburger menu */}
@@ -51,7 +60,7 @@ function Navbar({ onBookNowClick }) {
             type="button" 
             className="navbar__hamburger" 
             aria-label="Toggle menu" 
-            onClick={onBookNowClick}
+            onClick={() => onRoleSelect && onRoleSelect(activeRole === 'traveller' ? 'cabowner' : 'traveller')}
           >
             <span className="navbar__hamburger-bar"></span>
             <span className="navbar__hamburger-bar"></span>
