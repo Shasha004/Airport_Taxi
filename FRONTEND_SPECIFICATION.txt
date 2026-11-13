@@ -1,0 +1,432 @@
+================================================================================
+AIRPORT TAXI -> RIDE OFFERS (PART 1: PROJECT FOUNDATION + TRAVELER MODULE)
+FRONTEND UI SPECIFICATION & API ENDPOINTS GUIDE
+================================================================================
+
+This document details every API endpoint, UI screen, and interactive element
+required for Part 1 (Traveler Module) of the Airport Taxi application.
+
+--------------------------------------------------------------------------------
+1. BACKEND API ENDPOINTS FOR FRONTEND INTEGRATION
+--------------------------------------------------------------------------------
+
+Base URL: http://localhost:5000/api
+(In Vite development, /api is proxied to http://localhost:5000/api)
+
+--------------------------------------------------------------------------------
+A. Catalog Endpoints
+--------------------------------------------------------------------------------
+
+1. GET /api/catalog/flights
+   - Purpose: Fetch available arrival flights to populate the flight dropdown.
+   - Query Parameters (Optional):
+       * to: Filter by arrival airport code (e.g., ?to=NRT)
+       * from: Filter by departure airport code (e.g., ?from=BLR)
+       * date: Filter by arrival date (e.g., ?date=2027-04-10)
+       * all: Set to "true" to include flights to India; by default only arrival
+              flights (NRT, HND, KIX, DXB, AUH) are returned.
+   - Response Format:
+       {
+         "success": true,
+         "count": 240,
+         "data": [
+           {
+             "flight_id": "FL-401",
+             "airline": "AirVeda",
+             "flight_number": "AV 520",
+             "from": "BLR",
+             "to": "NRT",
+             "departure_local": "2027-04-09T23:50:00",
+             "arrival_local": "2027-04-10T10:30:00",
+             "stops": 0,
+             "duration_minutes": 430,
+             "price_per_seat": { "amount": 25200, "currency": "INR" },
+             "seats_left": 9,
+             "cabin": "ECONOMY"
+           },
+           ...
+         ]
+       }
+
+2. GET /api/catalog/hotels
+   - Purpose: Fetch destination hotels to populate the hotel dropdown.
+   - Query Parameters (Optional):
+       * city: Filter by city name (e.g., ?city=Tokyo)
+       * area: Filter by area name (e.g., ?area=Ueno)
+   - Response Format:
+       {
+         "success": true,
+         "count": 49,
+         "data": [
+           {
+             "hotel_id": "HTL-TYO-004",
+             "name": "Ueno Garden Inn",
+             "aliases": [],
+             "city": "Tokyo",
+             "area": "Ueno",
+             "lat": 35.712,
+             "lng": 139.7728,
+             "rating": 7.9,
+             "stars": 3,
+             "check_in_from": "15:00",
+             "check_out_until": "11:00",
+             "family_friendly": true
+           },
+           ...
+         ]
+       }
+
+3. GET /api/catalog/airports
+   - Purpose: Fetch airport data and their served cities (used for R1 validation).
+   - Response Format:
+       {
+         "success": true,
+         "count": 10,
+         "data": [
+           {
+             "code": "NRT",
+             "name": "Narita International Airport",
+             "city": "Tokyo",
+             "country": "JP",
+             "timezone": "Asia/Tokyo",
+             "lat": 35.772,
+             "lng": 140.3929,
+             "serves_cities": ["Tokyo"]
+           },
+           ...
+         ]
+       }
+
+4. GET /api/catalog/suppliers
+   - Purpose: Fetch taxi suppliers (for display / reference in supplier cards).
+   - Response Format:
+       {
+         "success": true,
+         "count": 11,
+         "data": [
+           {
+             "company_id": "TX-JP-01",
+             "name": "Sakura Cabs",
+             "airports": ["NRT", "HND"],
+             "service_from": "06:00",
+             "service_until": "23:00",
+             "rating": 4.4,
+             "vehicles": [...]
+           },
+           ...
+         ]
+       }
+
+--------------------------------------------------------------------------------
+B. Route & Price Range Endpoints
+--------------------------------------------------------------------------------
+
+1. GET /api/routes/price-range?flightId={flightId}&hotelId={hotelId}
+   - Purpose: Triggered when user selects both a flight and a hotel.
+              Checks airport-city compatibility (R1) and returns authoritative
+              price range (R3) and drive duration.
+   - Query Parameters (Required):
+       * flightId: e.g., "FL-401"
+       * hotelId: e.g., "HTL-TYO-004"
+   - Success Response (200 OK):
+       {
+         "success": true,
+         "data": {
+           "minPrice": 10200,
+           "maxPrice": 16800,
+           "price_min_inr": 10200,
+           "price_max_inr": 16800,
+           "currency": "INR",
+           "route": {
+             "airport": "NRT",
+             "city": "Tokyo",
+             "area": "Ueno",
+             "distance_km": 73.3,
+             "drive_minutes": 90
+           }
+         }
+       }
+   - Error Response (400 Bad Request - e.g. R1 Incompatibility):
+       {
+         "success": false,
+         "error": "Airport NRT (Tokyo) does not serve hotel city Osaka. Serves: [Tokyo]"
+       }
+
+--------------------------------------------------------------------------------
+C. Ride Request Endpoints
+--------------------------------------------------------------------------------
+
+1. POST /api/ride-requests
+   - Purpose: Submit a new ride request from the traveler form.
+   - Headers: { "Content-Type": "application/json" }
+   - Request Body:
+       {
+         "travelerName": "Menon family",           // Optional, default "Traveler"
+         "flightId": "FL-401",                     // Required (R1)
+         "hotelId": "HTL-TYO-004",                 // Required (R1)
+         "adults": 2,                              // Required, integer >= 1 (R1)
+         "childAges": [6],                         // Required array, ages 0-17 (R1)
+         "largeBags": 3,                           // Optional, integer >= 0
+         "smallBags": 2,                           // Optional, integer >= 0
+         "pickupTime": "2027-04-10T11:30:00",      // Optional, defaults to landing + 60m (R2)
+         "travelerPrice": 12000,                   // Required, between min and max (R3)
+         "carType": "SEDAN"                        // Optional: null | HATCHBACK | SEDAN | SUV | BUS
+       }
+   - Success Response (201 Created):
+       {
+         "success": true,
+         "message": "Ride request created successfully",
+         "data": {
+           "id": "REQ-10457637",
+           "travelerName": "Menon family",
+           "flightId": "FL-401",
+           "hotelId": "HTL-TYO-004",
+           "adults": 2,
+           "childAges": [6],
+           "largeBags": 3,
+           "smallBags": 2,
+           "pickupTime": "2027-04-10T11:30:00",
+           "carType": "SEDAN",
+           "travelerPrice": 12000,
+           "status": "open",
+           "flight": { ... },
+           "hotel": { ... },
+           "route": { ... }
+         }
+       }
+   - Error Response (400 Bad Request):
+       {
+         "success": false,
+         "error": "R3 Validation Error: Proposed price ₹9,000 is outside the allowed route range of ₹10,200 – ₹16,800",
+         "errors": [ ... ]
+       }
+
+2. GET /api/ride-requests
+   - Purpose: Retrieve list of all requests for traveler dashboard.
+   - Query Parameters (Optional):
+       * status: Filter by status (e.g., ?status=open)
+   - Response Format:
+       {
+         "success": true,
+         "count": 4,
+         "data": [ ...requests with enriched flight, hotel & route metadata... ]
+       }
+
+3. GET /api/ride-requests/:id
+   - Purpose: Retrieve a single request by its unique ID (e.g. /api/ride-requests/REQ-0001).
+
+================================================================================
+2. FRONTEND UI SCREENS & REQUIRED UI ELEMENTS
+================================================================================
+
+--------------------------------------------------------------------------------
+SCREEN 1: LANDING PAGE (LandingPage.jsx)
+Route: /
+--------------------------------------------------------------------------------
+
+Purpose:
+Let the user choose their role: Traveler or Taxi Supplier. For Part 1, Traveler
+is active; Taxi Supplier is marked for Part 2.
+
+UI Elements Needed:
+1. Header / Hero Section:
+   - Platform title: "Airport Taxi -> Ride Offers"
+   - Tagline: "Seamless Airport Transfers with Transparent Pricing"
+   - Badge: "Airport Ride Offers Platform - Part 1"
+   - Explanatory description of the platform flow.
+
+2. Role Selection Container (2 Cards):
+   a. Traveler Portal Card:
+      - Title: "Traveler Portal"
+      - Subtitle: "Family & Business Airport Transfers"
+      - Icon: Traveler / UserCheck icon
+      - Status Badge: "ACTIVE - PART 1" (Green)
+      - Feature highlights:
+        * Catalog-backed flight & hotel selection
+        * Automated 60-min landing pickup validation (R2)
+        * Dynamic route pricing boundary checks (R3)
+        * Luggage and passenger capacity validation (R1)
+      - Action Button: "Enter as Traveler" -> Navigates to /traveler
+      - Visual State: Highlighted border & shadow.
+
+   b. Taxi Supplier Portal Card:
+      - Title: "Taxi Supplier Portal"
+      - Subtitle: "Fleet Management & Ride Matching"
+      - Icon: Building / Fleet icon
+      - Status Badge: "COMING IN PART 2" (Gray)
+      - Feature highlights:
+        * Operational airport & service area filtering (R4)
+        * Vehicle seating and luggage fit matching (R5)
+        * Overlap-free busy window scheduling (R6)
+        * Competitive offer assignment & bidding (R7)
+      - Action Button: "Supplier Portal (Part 2)" -> Disabled button
+
+3. Rules & Guarantee Highlights Banner:
+   - R1 banner: Strict catalog and airport-hotel compatibility check
+   - R2 banner: 60-minute post-landing buffer for immigration & baggage claim
+   - R3 banner: Authoritative price ranges anchored to routes.json
+
+--------------------------------------------------------------------------------
+SCREEN 2: TRAVELER DASHBOARD (TravelerDashboard.jsx)
+Route: /traveler
+--------------------------------------------------------------------------------
+
+Purpose:
+Central dashboard for travelers to see all posted ride requests, view their
+details, track their status, and launch new ride requests.
+
+UI Elements Needed:
+1. Dashboard Header:
+   - Page Title: "Traveler Dashboard"
+   - Subtitle: "Manage your airport ride requests and track status in real-time"
+   - "Refresh" Button: Reloads requests from GET /api/ride-requests
+   - "Create New Ride" Button (Primary CTA): Navigates to /traveler/create
+
+2. Filter Tabs:
+   - Tab 1: "All Requests (N)"
+   - Tab 2: "Open Requests"
+
+3. State Indicators:
+   - Loading State: Animated spinner with "Loading your ride requests..."
+   - Error Banner: Red notification bar if fetching requests fails
+   - Empty State: Displayed if no requests exist, with an icon and CTA to post
+
+4. Ride Request Card (Rendered for each request in the grid):
+   - Header Row:
+     * Request ID Badge (e.g. "REQ-0001", "REQ-10457637")
+     * Traveler Name Tag (e.g. "Menon family", "Kavya Rao")
+     * Status Pill (e.g. "OPEN" with glowing green/blue dot)
+   - Route Segment Banner:
+     * Left: Arrival Flight number, airline name, origin -> destination (e.g. AV 520, BLR -> NRT)
+     * Middle: Route arrow (->)
+     * Right: Hotel name, city, and area (e.g. Ueno Garden Inn, Tokyo, Ueno)
+   - Request Details 2x2 Grid:
+     * Pickup Time: Formatted local date & time (e.g., Apr 10, 2027, 11:30 AM)
+     * Passengers: Adults count + Children count with age breakdown (e.g., 2 Adults + 1 Child (6y) -> 3 seats)
+     * Luggage: Large bags count & Small bags count (e.g., 3 Large, 2 Small)
+     * Car Preference: Car type badge if selected (Sedan, SUV, etc.) or "Any"
+     * Drive Duration: Estimated minutes and distance (e.g., ~90 mins (73.3 km))
+   - Footer Row:
+     * Proposed Price: Large prominent INR amount (e.g. ₹12,000)
+     * Allowed Route Range: Subtext displaying ₹min - ₹max (e.g. ₹10,200 - ₹16,800)
+
+--------------------------------------------------------------------------------
+SCREEN 3: CREATE RIDE REQUEST PAGE (CreateRidePage.jsx)
+Route: /traveler/create
+--------------------------------------------------------------------------------
+
+Purpose:
+Interactive form allowing a traveler to configure all ride details, see
+immediate route pricing boundaries, and submit a verified ride request.
+
+UI Elements Needed:
+1. Page Header:
+   - "Back to Dashboard" link with left arrow
+   - Title: "Request an Airport Taxi"
+   - Subtitle: "Configure your transfer details and propose a fair price within the verified route range."
+   - Demo Shortcut Button: "Load Menon Family Demo (FL-401)"
+     (Automatically pre-fills FL-401, HTL-TYO-004, 2 adults, 1 child age 6, 3 large, 2 small bags, 11:30 pickup, ₹12,000 price)
+
+2. Feedback & Alerts Area:
+   - Success Card (rendered after submission):
+     * Green checkmark icon
+     * Title: "Ride Request Posted Successfully!"
+     * Details: Generated Request ID, Route, Proposed Price, Pickup Time
+     * Actions: "Go to Traveler Dashboard" button & "Post Another Ride" button
+   - Error Banner:
+     * Red banner listing all frontend and backend validation failures
+
+3. Form Section 1: Flight & Hotel Selection (R1)
+   - Traveler / Group Name: Text input (e.g., "Menon family")
+   - Arrival Flight Select Dropdown:
+     * Label: "Arrival Flight *"
+     * Options: "{flight_number} ({airline}) - {from} -> {to} | Lands: {arrival_local}"
+     * Selected Flight Pill: Shows Airline, Origin, Destination, Landing Time
+   - Destination Hotel Select Dropdown:
+     * Label: "Destination Hotel *"
+     * Options: "{name} - {city} ({area})"
+     * Selected Hotel Pill: Shows City, Area, Star rating
+   - Dynamic Route Status Card (Changes based on selection):
+     * Loading State: "Verifying route compatibility & calculating price range..."
+     * Incompatible State (R1 Error): Red alert showing "Airport NRT does not serve hotel city Osaka"
+     * Verified Route State (Success): Shows Airport, Destination City/Area, Road Distance (km),
+       Drive Duration (mins), and Allowed Price Range (₹min - ₹max).
+
+4. Form Section 2: Passengers & Baggage (R1)
+   - Adults (Aged 18+) Input:
+     * Label: "Adults (Aged 18+) *"
+     * Number input: min="1", max="20"
+     * Helper text: "Minimum 1 adult required (R1)"
+   - Children (Aged 0-17) Dynamic Control:
+     * Header with "+ Add Child" button
+     * Child List: Each child displays "Child #N Age" number input (min="0", max="17")
+       and a remove ("x") button
+     * Empty state note: "No children in travel group"
+   - Baggage Inputs (2 Columns):
+     * Large Bags: Number input (min="0")
+     * Small Bags: Number input (min="0")
+
+5. Form Section 3: Pickup Time (R2)
+   - Pickup Time Input:
+     * Label: "Pickup Time (Airport Local Time)"
+     * Input type: "datetime-local"
+     * min attribute: Automatically set to flight.arrival_local + 60 minutes
+     * Default value: Automatically set to flight.arrival_local + 60 minutes
+   - Pickup Time Info Box:
+     * Blue info box: "Flight lands at {arrival_local}. Earliest valid pickup is {earliestPickup}."
+
+6. Form Section 4: Proposed Traveler Price & Preferences (R3)
+   - Proposed Price Input:
+     * Label: "Proposed Price (INR ₹) *"
+     * Number input with currency prefix "₹"
+     * Placeholder: shows the route range (e.g., "10200 - 16800")
+   - Live Price Validation Badge:
+     * If within range: Green badge "✓ Within range"
+     * If out of range: Red badge "✕ Out of range"
+     * Range indicator: "Allowed Range: ₹10,200 to ₹16,800"
+   - Car Type Preference Select Dropdown (Optional):
+     * Options: Any Vehicle Type, Hatchback, Sedan, SUV, Bus
+
+7. Form Action Buttons:
+   - "Cancel" Button: Secondary button returning to /traveler
+   - "Submit Ride Request" Button: Primary large button
+     * Disabled if route is incompatible (R1 error) or while submitting
+     * Displays loading spinner ("Posting Request...") during API call
+
+--------------------------------------------------------------------------------
+SCREEN 4: NAVIGATION BAR (Navbar.jsx)
+--------------------------------------------------------------------------------
+
+- Brand Logo: Car + Airplane icon badge
+- Brand Text: "Airport Taxi" (Bold) / "RIDE OFFERS" (Subtext)
+- Navigation Links:
+  * "Select Role" -> /
+  * "Traveler Dashboard" -> /traveler
+  * "Post Ride Request" -> /traveler/create (Prominent CTA button)
+
+================================================================================
+3. VALIDATION RULES IMPLEMENTATION SUMMARY (R1, R2, R3)
+================================================================================
+
+Rule R1 (Flight, Hotel & Passenger Validation):
+- Flight must exist in flights.json (only flights landing in NRT, HND, KIX, DXB, AUH).
+- Hotel must exist in hotels.json.
+- Flight arrival airport must serve hotel's city:
+  * NRT, HND serve Tokyo
+  * KIX serves Osaka, Kyoto
+  * DXB serves Dubai, Abu Dhabi
+  * AUH serves Abu Dhabi
+- At least 1 adult required (adults >= 1).
+- Each child age must be an integer between 0 and 17.
+
+Rule R2 (Pickup Time Validation):
+- Earliest pickup time = flight arrival_local + 60 minutes.
+- If traveler omits pickup time, arrival_local + 60m is applied automatically.
+- Comparing dates strictly in airport local wall-clock time without timezone skew.
+
+Rule R3 (Traveler Price Validation):
+- Authoritative bounds from routes.json (airport + city + area):
+  price_min_inr <= traveler_price <= price_max_inr.
+- Prices below min or above max are rejected with a clear descriptive message.
+================================================================================
+

@@ -1,0 +1,13 @@
+{
+  "name": "airport-taxi",
+  "version": "1.0.0",
+  "description": "Airport Taxi -> Ride Offers Platform",
+  "scripts": {
+    "start": "cd backend && npm start",
+    "backend": "cd backend && npm run dev",
+    "client": "cd client && npm run dev",
+    "test": "cd backend && npm test",
+    "build": "cd client && npm run build"
+  }
+}
+
