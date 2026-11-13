@@ -1,6 +1,6 @@
 /* ==========================================================================
    LANDING PAGE STYLES (Landing.css)
-   50 / 50 Split Layout:
+   Direct 50 / 50 Split Layout:
    - Left 50%: All text, title, specs, and Book Now button
    - Right 50%: Big size 3D rotating blue sports car video
    ========================================================================== */
@@ -14,99 +14,7 @@
 }
 
 /* ==========================================================================
-   STAGE 1: AIRPLANE WINDOW INTRO (IMAGE 1)
-   Completely clean, cinematic window with ZERO ugly popups/boxes.
-   Inside the glass, a small live view shows the rotating blue sports car!
-   ========================================================================== */
-
-.window-portal {
-  position: fixed;
-  inset: 0;
-  z-index: 500;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  background-color: #031338;
-  transform-origin: 50% 48%; /* Centers right on the window glass */
-  transition: transform 1.25s cubic-bezier(0.7, 0, 0.2, 1),
-              opacity 1.1s cubic-bezier(0.7, 0, 0.2, 1),
-              filter 1.1s cubic-bezier(0.7, 0, 0.2, 1);
-  will-change: transform, opacity, filter;
-}
-
-.window-portal__bg {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-}
-
-.window-portal__img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center;
-  user-select: none;
-}
-
-/* Glass Aperture: Small view of the rotating car through the window opening */
-.window-portal__glass-aperture {
-  position: absolute;
-  top: 47.6%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: clamp(210px, 20vw, 290px);
-  height: clamp(310px, 30vw, 420px);
-  border-radius: 96px;
-  overflow: hidden;
-  z-index: 10;
-  box-shadow: 
-    inset 0 0 24px rgba(0, 0, 0, 0.75), 
-    inset 0 0 10px rgba(0, 0, 0, 0.9),
-    0 0 15px rgba(0, 210, 255, 0.25);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.window-portal:hover .window-portal__glass-aperture {
-  transform: translate(-50%, -50%) scale(1.02);
-  box-shadow: 
-    inset 0 0 20px rgba(0, 0, 0, 0.6), 
-    0 0 25px rgba(0, 229, 255, 0.45);
-}
-
-.window-portal__glass-video {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center 52%;
-  display: block;
-  transform: scale(1.08);
-}
-
-.window-portal__glass-sheen {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    135deg, 
-    rgba(255, 255, 255, 0.38) 0%, 
-    rgba(255, 255, 255, 0.08) 28%, 
-    transparent 45%, 
-    rgba(255, 255, 255, 0.12) 100%
-  );
-  pointer-events: none;
-  z-index: 2;
-}
-
-.window-portal--zoomed-in {
-  transform: scale(11);
-  opacity: 0;
-  filter: blur(14px);
-  pointer-events: none;
-}
-
-/* ==========================================================================
-   STAGE 2: MAIN PAGE DESIGN (50 / 50 SPLIT LAYOUT)
+   MAIN STAGE (50 / 50 SPLIT DIRECTLY)
    ========================================================================== */
 
 .main-stage {
@@ -119,22 +27,10 @@
   background: 
     radial-gradient(circle at 75% 50%, rgba(28, 86, 237, 0.45) 0%, transparent 60%),
     linear-gradient(135deg, #02123b 0%, #032470 35%, #083eb5 70%, #021545 100%);
-  opacity: 0;
-  transform: scale(0.94);
-  filter: blur(8px);
-  transition: opacity 1.15s cubic-bezier(0.16, 1, 0.3, 1),
-              transform 1.15s cubic-bezier(0.16, 1, 0.3, 1),
-              filter 1.15s cubic-bezier(0.16, 1, 0.3, 1);
-  z-index: 10;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-}
-
-.main-stage--active {
-  opacity: 1;
-  transform: scale(1);
-  filter: blur(0px);
+  z-index: 10;
 }
 
 /* 50 / 50 Hero Split Container */
@@ -328,7 +224,6 @@
   display: block;
 }
 
-/* Ambient glow under the video card */
 .car-big-video__glow {
   position: absolute;
   bottom: 0;

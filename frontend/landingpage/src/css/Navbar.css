@@ -97,25 +97,6 @@
   gap: 20px;
 }
 
-.navbar__window-pill {
-  padding: 6px 14px;
-  border-radius: 20px;
-  background: rgba(255, 255, 255, 0.15);
-  border: 1px solid rgba(255, 255, 255, 0.35);
-  color: #ffffff;
-  font-family: var(--font-heading);
-  font-size: 0.8rem;
-  font-weight: 600;
-  backdrop-filter: blur(8px);
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.navbar__window-pill:hover {
-  background: rgba(255, 255, 255, 0.28);
-  border-color: #ffffff;
-}
-
 /* Hamburger icon matching Image 2 top right */
 .navbar__hamburger {
   display: flex;

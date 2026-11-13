@@ -5,12 +5,12 @@ import '../css/Navbar.css';
  * Navbar Component matching Image 2 (AirportCarWala).
  * Header items: Logo with airplane over car, nav links, and hamburger menu.
  */
-function Navbar({ onBookNowClick, onResetWindow, isWindowZoomed }) {
+function Navbar({ onBookNowClick }) {
   return (
     <header className="navbar">
       <div className="navbar__container">
         {/* Brand Logo: Plane above Car outline */}
-        <div className="navbar__brand" onClick={onResetWindow} title="Click to view Airplane Window intro">
+        <div className="navbar__brand">
           <div className="navbar__logo-icon">
             <svg viewBox="0 0 54 36" fill="none" xmlns="http://www.w3.org/2000/svg">
               {/* Airplane taking off angled to the right */}
@@ -45,18 +45,8 @@ function Navbar({ onBookNowClick, onResetWindow, isWindowZoomed }) {
           <a href="#contact" className="navbar__link" onClick={onBookNowClick}>Contact Us</a>
         </nav>
 
-        {/* Right side: Window re-trigger and Hamburger menu */}
+        {/* Right side: Hamburger menu */}
         <div className="navbar__right">
-          {isWindowZoomed && (
-            <button 
-              type="button" 
-              onClick={onResetWindow} 
-              className="navbar__window-pill"
-              title="Return to Airplane Window view"
-            >
-              ✈ Window
-            </button>
-          )}
           <button 
             type="button" 
             className="navbar__hamburger" 

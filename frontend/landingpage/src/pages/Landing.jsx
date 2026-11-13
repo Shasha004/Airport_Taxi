@@ -2,22 +2,16 @@ import React, { useState, useEffect, useRef } from 'react';
 import Navbar from '../components/Navbar.jsx';
 import Footer from '../components/Footer.jsx';
 import BookingModal from '../components/BookingModal.jsx';
-import airplaneWindowImg from '../image/airplane_window.jpg';
 import rotatingCarVideo from '../image/Blue_sports_car_rotating_01db1ae0.mp4';
 import '../css/Landing.css';
 
 /**
- * Landing Page Component.
- *
- * 1. Intro Stage: Airplane Window (Image 1) with clean cinematic glass portal.
- * 2. Main Page Stage: 50 / 50 Split Layout:
- *    - Left (50%): All text (Title, Subtitle, *SPECS table, and BOOK NOW button)
- *    - Right (50%): Big, prominent 3D rotating blue sports car video!
+ * Main Landing Page Component (AirportCarWala).
+ * Direct 50 / 50 Split Layout:
+ * - Left (50%): All text (Title, Subtitle, *SPECS table, and BOOK NOW button)
+ * - Right (50%): Big 3D rotating blue sports car video running continuously.
  */
 function Landing() {
-  // Controls the zoom transition from airplane window to full-screen main page
-  const [isWindowZoomed, setIsWindowZoomed] = useState(false);
-
   // Controls the Hackathon Problem 2 Booking & Rules modal
   const [isBookingOpen, setIsBookingOpen] = useState(false);
 
@@ -25,7 +19,6 @@ function Landing() {
   const [activeSlide, setActiveSlide] = useState(2);
 
   const mainVideoRef = useRef(null);
-  const portalVideoRef = useRef(null);
 
   // Specs list for interactive carousel
   const specsList = [
@@ -63,61 +56,22 @@ function Landing() {
 
   const currentSpecs = specsList[activeSlide];
 
-  // Keep videos playing smoothly
+  // Auto-play the rotating car video immediately
   useEffect(() => {
-    if (portalVideoRef.current) {
-      portalVideoRef.current.play().catch(() => {});
-    }
-    if (isWindowZoomed && mainVideoRef.current) {
+    if (mainVideoRef.current) {
       mainVideoRef.current.play().catch(() => {});
     }
-  }, [isWindowZoomed, activeSlide]);
+  }, [activeSlide]);
 
   return (
-    <div className={`landing-viewport ${isWindowZoomed ? 'landing-viewport--zoomed' : ''}`}>
+    <div className="landing-viewport">
       {/* ====================================================================
-          STAGE 1: AIRPLANE WINDOW INTRO (IMAGE 1)
-          Clean cinematic airplane window with live glass portal into the car.
+          MAIN PAGE (50 / 50 SPLIT LAYOUT DIRECTLY)
           ==================================================================== */}
-      <div 
-        className={`window-portal ${isWindowZoomed ? 'window-portal--zoomed-in' : ''}`}
-        onClick={() => setIsWindowZoomed(true)}
-        title="Click window to fly into lounge"
-      >
-        <div className="window-portal__bg">
-          <img 
-            src={airplaneWindowImg} 
-            alt="Airplane window view" 
-            className="window-portal__img"
-          />
-        </div>
-
-        {/* Small live view through the window glass */}
-        <div className="window-portal__glass-aperture">
-          <video
-            ref={portalVideoRef}
-            src={rotatingCarVideo}
-            autoPlay
-            loop
-            muted
-            playsInline
-            className="window-portal__glass-video"
-          />
-          <div className="window-portal__glass-sheen"></div>
-        </div>
-      </div>
-
-      {/* ====================================================================
-          STAGE 2: MAIN PAGE DESIGN (50 / 50 SPLIT LAYOUT)
-          Left 50%: All Text & Specs
-          Right 50%: Big 3D Rotating Blue Sports Car Video
-          ==================================================================== */}
-      <main className={`main-stage ${isWindowZoomed ? 'main-stage--active' : ''}`}>
+      <main className="main-stage">
         {/* Top Navbar */}
         <Navbar 
           onBookNowClick={() => setIsBookingOpen(true)}
-          onResetWindow={() => setIsWindowZoomed(false)}
-          isWindowZoomed={isWindowZoomed}
         />
 
         {/* 50 / 50 Hero Split Grid */}
@@ -184,9 +138,7 @@ function Landing() {
                   playsInline
                   className="car-big-video"
                 />
-                {/* High-tech cyan glow ring & floor shadow */}
                 <div className="car-big-video__glow"></div>
-                <div className="car-big-video__shadow"></div>
               </div>
             </div>
           </div>
