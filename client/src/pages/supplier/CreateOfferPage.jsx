@@ -420,6 +420,7 @@ export default function CreateOfferPage() {
             type="submit"
             className="btn-primary"
             disabled={submitting || !selectedCarCap.eligible}
+            style={submitting ? { opacity: 0.6, pointerEvents: 'none', cursor: 'not-allowed' } : {}}
             title={!selectedCarCap.eligible ? 'Selected vehicle does not meet capacity requirements (R5)' : 'Submit Offer'}
           >
             {submitting ? (

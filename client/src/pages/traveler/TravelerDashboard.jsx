@@ -78,7 +78,20 @@ export default function TravelerDashboard() {
         return false;
       });
 
-      setRequests(mine);
+      // Deduplicate to ensure multiple clicks never reflect duplicate requests
+      const uniqueMine = [];
+      const seenKeys = new Set();
+      for (const r of mine) {
+        const key = r.status === 'open'
+          ? `${(r.travelerName || '').trim().toLowerCase()}_${r.flightId}_${r.hotelId}_${(r.pickupAt || '').slice(0, 16)}_${r.travelerPrice}`
+          : `id_${r.id}`;
+        if (!seenKeys.has(key)) {
+          seenKeys.add(key);
+          uniqueMine.push(r);
+        }
+      }
+
+      setRequests(uniqueMine);
     } catch (err) {
       setError(err.response?.data?.error || err.message || 'Failed to load ride requests');
     } finally {

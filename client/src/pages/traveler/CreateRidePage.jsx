@@ -702,6 +702,7 @@ export default function CreateRidePage() {
             type="submit"
             className="btn-primary btn-lg"
             disabled={submitting || Boolean(routeError)}
+            style={submitting ? { opacity: 0.6, pointerEvents: 'none', cursor: 'not-allowed' } : {}}
           >
             {submitting ? (
               <>

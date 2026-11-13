@@ -47,7 +47,17 @@ export default function OffersPage() {
         offerApi.getOffers(requestId),
       ]);
       setRequest(reqRes.data);
-      setOffers(offersRes.data || []);
+      const rawOffers = offersRes.data || [];
+      const uniqueOffers = [];
+      const seenOfferKeys = new Set();
+      for (const off of rawOffers) {
+        const key = `${off.supplierId || off.supplier_id}_${off.carId || off.car_id}_${off.status}`;
+        if (!seenOfferKeys.has(key)) {
+          seenOfferKeys.add(key);
+          uniqueOffers.push(off);
+        }
+      }
+      setOffers(uniqueOffers);
     } catch (err) {
       setError(err.response?.data?.error || err.message || 'Failed to load offers');
     } finally {

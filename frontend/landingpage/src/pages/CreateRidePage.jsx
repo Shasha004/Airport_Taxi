@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { getFlights, getHotels, getAirports, getPriceRange, createRideRequest } from '../services/api.js';
 import '../css/CreateRidePage.css';
 
@@ -88,6 +88,7 @@ function CreateRidePage({ onNavigate }) {
   const [routeInfo, setRouteInfo] = useState(null);
   const [calculatingPrice, setCalculatingPrice] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const submitLockRef = useRef(false);
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
 
@@ -165,6 +166,7 @@ function CreateRidePage({ onNavigate }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (submitting || submitLockRef.current) return;
     setError('');
     setSuccessMsg('');
 
@@ -193,17 +195,24 @@ function CreateRidePage({ onNavigate }) {
       }
     }
 
+    submitLockRef.current = true;
     setSubmitting(true);
-    const res = await createRideRequest(form);
-    setSubmitting(false);
-
-    if (res.ok) {
-      setSuccessMsg(`Ride Request ${res.request?.id || ''} created successfully! Redirecting...`);
-      setTimeout(() => {
-        onNavigate('dashboard');
-      }, 1200);
-    } else {
-      setError(res.error || 'Failed to submit ride request to database.');
+    try {
+      const res = await createRideRequest(form);
+      if (res.ok) {
+        setSuccessMsg(`Ride Request ${res.request?.id || ''} created successfully! Redirecting...`);
+        setTimeout(() => {
+          onNavigate('dashboard');
+        }, 1200);
+      } else {
+        submitLockRef.current = false;
+        setError(res.error || 'Failed to submit ride request to database.');
+      }
+    } catch (err) {
+      submitLockRef.current = false;
+      setError(err.message || 'Failed to submit ride request.');
+    } finally {
+      setSubmitting(false);
     }
   };
 
