@@ -2,14 +2,14 @@ import React, { useState, useEffect, useRef } from 'react';
 import Navbar from '../components/Navbar.jsx';
 import Footer from '../components/Footer.jsx';
 import BookingModal from '../components/BookingModal.jsx';
-import rotatingCarVideo from '../image/Blue_sports_car_rotating_01db1ae0.mp4';
+import rotatingCarVideo from '../image/Blue_sports_car_rotating_075f9c82.mp4';
 import '../css/Landing.css';
 
 /**
  * Main Landing Page Component (AirportCarWala).
- * Direct 50 / 50 Split Layout:
- * - Left (50%): All text (Title, Subtitle, *SPECS table, and BOOK NOW button)
- * - Right (50%): Big 3D rotating blue sports car video running continuously.
+ * Black and White Luxury Noir Theme:
+ * - Left (50%): Signature "Awesome" script font styling, subtitle, *SPECS, and Book Now
+ * - Right (50%): Big size 3D rotating supercar video in high-contrast monochrome silver & black!
  */
 function Landing() {
   // Controls the Hackathon Problem 2 Booking & Rules modal
@@ -66,7 +66,7 @@ function Landing() {
   return (
     <div className="landing-viewport">
       {/* ====================================================================
-          MAIN PAGE (50 / 50 SPLIT LAYOUT DIRECTLY)
+          MAIN PAGE (50 / 50 BLACK & WHITE LUXURY SPLIT)
           ==================================================================== */}
       <main className="main-stage">
         {/* Top Navbar */}
@@ -79,11 +79,11 @@ function Landing() {
           <div className="hero-split__container">
             {/* ================= LEFT 50%: ALL TEXT & SPECS ================= */}
             <div className="hero-split__left">
-              <span className="hero-split__eyebrow">LUXURY CAR RENTALS</span>
+              <span className="hero-split__eyebrow">Luxury Car Rentals</span>
               
-              <h1 className="hero-split__title">
-                LUXURY CAR<br />
-                RENTALS
+              <h1 className="hero-split__title font-awesome-style">
+                Luxury Car<br />
+                Rentals
               </h1>
 
               <p className="hero-split__subtitle">

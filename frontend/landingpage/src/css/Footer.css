@@ -1,6 +1,5 @@
 /* ==========================================================================
-   FOOTER COMPONENT STYLES
-   Exact 1:1 recreation of bottom controls from Image 2 (AirportCarWala)
+   FOOTER COMPONENT STYLES (BLACK & WHITE THEME)
    ========================================================================== */
 
 .footer {
@@ -35,16 +34,16 @@
 }
 
 .footer__social-link {
-  color: #ffffff;
-  transition: opacity 0.2s ease;
+  color: #b0b0b0;
+  transition: all 0.2s ease;
 }
 
 .footer__social-link:hover {
-  opacity: 0.75;
+  color: #ffffff;
 }
 
 .footer__divider {
-  color: rgba(255, 255, 255, 0.5);
+  color: rgba(255, 255, 255, 0.3);
   font-size: 0.8rem;
 }
 
@@ -67,7 +66,7 @@
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #ffffff;
+  background: #666666;
 }
 
 .footer__dot--ring {
@@ -76,7 +75,7 @@
   border-radius: 50%;
   background: transparent;
   border: 2px solid #ffffff;
-  box-shadow: 0 0 10px rgba(255, 255, 255, 0.4);
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.6);
 }
 
 /* Arrow Navigation & More (Right) */
@@ -90,7 +89,7 @@
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  border: 1.5px solid rgba(255, 255, 255, 0.8);
+  border: 1.5px solid rgba(255, 255, 255, 0.7);
   background: transparent;
   color: #ffffff;
   display: flex;
@@ -104,7 +103,8 @@
 
 .footer__arrow-btn:hover {
   background: #ffffff;
-  color: #04257c;
+  color: #000000;
+  border-color: #ffffff;
   transform: scale(1.08);
 }
 

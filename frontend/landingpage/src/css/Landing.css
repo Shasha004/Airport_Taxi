@@ -1,8 +1,8 @@
 /* ==========================================================================
-   LANDING PAGE STYLES (Landing.css)
-   Direct 50 / 50 Split Layout:
-   - Left 50%: All text, title, specs, and Book Now button
-   - Right 50%: Big size 3D rotating blue sports car video
+   LANDING PAGE STYLES (Landing.css) - BLACK & WHITE THEME
+   - Exact "Awesome" script font styling with 3D drop shadow
+   - 50 / 50 Split Layout
+   - Right 50%: Big rotating car video seamlessly blended in pure black
    ========================================================================== */
 
 .landing-viewport {
@@ -10,11 +10,11 @@
   width: 100vw;
   height: 100vh;
   overflow: hidden;
-  background-color: #031853;
+  background-color: #000000;
 }
 
 /* ==========================================================================
-   MAIN STAGE (50 / 50 SPLIT DIRECTLY)
+   MAIN STAGE (BLACK & WHITE THEME)
    ========================================================================== */
 
 .main-stage {
@@ -23,10 +23,10 @@
   width: 100vw;
   height: 100vh;
   overflow: hidden;
-  /* Deep royal blue satin waves gradient */
+  /* Deep obsidian black luxury background */
   background: 
-    radial-gradient(circle at 75% 50%, rgba(28, 86, 237, 0.45) 0%, transparent 60%),
-    linear-gradient(135deg, #02123b 0%, #032470 35%, #083eb5 70%, #021545 100%);
+    radial-gradient(circle at 75% 50%, rgba(40, 40, 40, 0.45) 0%, transparent 65%),
+    linear-gradient(135deg, #000000 0%, #080808 35%, #121212 70%, #000000 100%);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -45,12 +45,12 @@
 
 .hero-split__container {
   width: 100%;
-  max-width: 1750px;
+  max-width: 1800px;
   margin: 0 auto;
   display: grid;
   grid-template-columns: 1fr 1fr; /* 50 / 50 Split */
   align-items: center;
-  gap: 50px;
+  gap: 40px;
 }
 
 /* ================= LEFT 50%: ALL TEXT & SPECS ================= */
@@ -60,63 +60,73 @@
   align-items: flex-start;
   z-index: 5;
   user-select: none;
-  max-width: 620px;
+  max-width: 640px;
 }
 
 .hero-split__eyebrow {
   display: inline-block;
-  font-family: var(--font-heading);
-  font-size: 0.82rem;
-  font-weight: 700;
-  letter-spacing: 0.16em;
-  color: #00e5ff;
-  text-transform: uppercase;
-  margin-bottom: 12px;
+  font-family: var(--font-script);
+  font-size: 1.35rem;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  color: #e2e8f0;
+  margin-bottom: 6px;
+  text-shadow: 2px 2px 0 #000000;
 }
 
-.hero-split__title {
-  font-family: var(--font-heading);
-  font-size: clamp(2.6rem, 4.4vw, 4.4rem);
-  font-weight: 900;
-  line-height: 0.98;
-  letter-spacing: -0.02em;
+/* EXACT "Awesome" FONT STYLING RECREATION */
+.hero-split__title.font-awesome-style {
+  font-family: var(--font-script);
+  font-size: clamp(3.4rem, 5.4vw, 5.4rem);
+  font-weight: 400;
+  line-height: 1.05;
   color: #ffffff;
-  text-transform: uppercase;
-  text-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  /* Thick black contour outline + solid 3D drop shadow matching uploaded sample */
+  -webkit-text-stroke: 2.2px #000000;
+  text-shadow: 
+    2px 2px 0 #000000,
+    4px 4px 0 #000000,
+    6px 6px 0 #000000,
+    8px 8px 18px rgba(0, 0, 0, 0.95);
+  letter-spacing: 0.02em;
+  transform: rotate(-1.5deg);
+  margin-bottom: 8px;
 }
 
 .hero-split__subtitle {
   font-family: var(--font-heading);
-  font-size: clamp(0.85rem, 1.15vw, 1rem);
+  font-size: clamp(0.85rem, 1.1vw, 0.98rem);
   font-weight: 700;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.08em;
   color: #ffffff;
-  margin-top: 18px;
-  line-height: 1.45;
+  margin-top: 14px;
+  line-height: 1.5;
   text-transform: uppercase;
-  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
 }
 
-/* Specs Box Integrated on Left Column */
+/* Specs Box Integrated on Left Column (Obsidian Card) */
 .hero-split__specs-box {
-  margin-top: 24px;
+  margin-top: 22px;
   padding: 18px 24px;
-  background: rgba(3, 20, 68, 0.55);
-  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(18, 18, 18, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 12px;
-  backdrop-filter: blur(10px);
+  backdrop-filter: blur(12px);
   width: 100%;
-  max-width: 480px;
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25);
+  max-width: 500px;
+  box-shadow: 0 10px 35px rgba(0, 0, 0, 0.6);
 }
 
 .specs-title {
   font-family: var(--font-heading);
   font-size: 1.05rem;
   font-weight: 800;
-  letter-spacing: 0.06em;
-  color: #00e5ff;
+  letter-spacing: 0.08em;
+  color: #ffffff;
   margin-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+  padding-bottom: 6px;
 }
 
 .specs-table {
@@ -135,8 +145,9 @@
   font-family: var(--font-heading);
   font-size: 0.76rem;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.7);
-  letter-spacing: 0.02em;
+  color: #94a3b8;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 .specs-val {
@@ -151,29 +162,30 @@
   margin-top: 26px;
 }
 
+/* High-contrast Black & White BOOK NOW Button */
 .hero-btn-book {
   display: inline-flex;
   align-items: center;
   gap: 12px;
-  padding: 13px 28px;
+  padding: 13px 32px;
   background: transparent;
   border: 2px solid #ffffff;
   color: #ffffff;
   font-family: var(--font-heading);
   font-size: 1.05rem;
   font-weight: 800;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.06em;
   border-radius: 4px;
   cursor: pointer;
-  transition: all 0.25s ease;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
 }
 
 .hero-btn-book:hover {
   background: #ffffff;
-  color: #032170;
+  color: #000000;
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(255, 255, 255, 0.4);
+  box-shadow: 0 8px 30px rgba(255, 255, 255, 0.35);
 }
 
 .hero-btn-arrow {
@@ -185,7 +197,7 @@
   transform: translateX(4px);
 }
 
-/* ================= RIGHT 50%: BIG ROTATING CAR VIDEO ================= */
+/* ================= RIGHT 50%: BIG ROTATING MONOCHROME CAR VIDEO ================= */
 .hero-split__right {
   display: flex;
   align-items: center;
@@ -197,42 +209,39 @@
 .car-big-video-card {
   position: relative;
   width: 100%;
-  max-width: 860px;
-  border-radius: 20px;
-  overflow: hidden;
-  box-shadow: 
-    0 25px 60px rgba(0, 0, 0, 0.65), 
-    0 0 50px rgba(0, 210, 255, 0.35);
-  border: 1.5px solid rgba(255, 255, 255, 0.25);
-  background: #03143e;
-  transform: perspective(1000px) rotateY(-3deg);
-  transition: transform 0.4s ease, box-shadow 0.4s ease;
+  max-width: 920px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.car-big-video-card:hover {
-  transform: perspective(1000px) rotateY(0deg) scale(1.02);
-  box-shadow: 
-    0 30px 75px rgba(0, 0, 0, 0.75), 
-    0 0 65px rgba(0, 229, 255, 0.55);
-}
-
+/* Pure Black Background Video blending seamlessly with screen blend mode */
 .car-big-video {
   width: 100%;
   height: auto;
   aspect-ratio: 16 / 9;
-  object-fit: cover;
+  object-fit: contain;
   display: block;
+  mix-blend-mode: screen; /* Seamlessly eliminates any black box boundaries */
+  filter: grayscale(100%) contrast(118%) brightness(108%);
+  transform: scale(1.1);
+  transition: transform 0.4s ease, filter 0.4s ease;
 }
 
+.car-big-video-card:hover .car-big-video {
+  transform: scale(1.14);
+  filter: grayscale(100%) contrast(125%) brightness(115%);
+}
+
+/* Ambient monochrome floor reflection */
 .car-big-video__glow {
   position: absolute;
-  bottom: 0;
-  left: 10%;
-  width: 80%;
-  height: 35px;
+  bottom: 8%;
+  width: 85%;
+  height: 30px;
   border-radius: 50%;
-  background: radial-gradient(ellipse at center, rgba(0, 229, 255, 0.5) 0%, transparent 70%);
-  filter: blur(14px);
+  background: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.25) 0%, transparent 70%);
+  filter: blur(16px);
   pointer-events: none;
 }
 
@@ -247,8 +256,8 @@
   .hero-split__container {
     gap: 30px;
   }
-  .hero-split__title {
-    font-size: 2.8rem;
+  .hero-split__title.font-awesome-style {
+    font-size: 3.4rem;
   }
 }
 
@@ -268,7 +277,6 @@
     justify-content: center;
   }
   .car-big-video-card {
-    transform: none;
     max-width: 600px;
   }
 }

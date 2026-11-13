@@ -1,31 +1,32 @@
 /* ==========================================================================
-   GLOBAL STYLES & RESET
+   GLOBAL STYLES & RESET (BLACK & WHITE THEME)
    Project: AirportCarWala (Problem 2 - Airport Taxi Ride Offers)
    ========================================================================== */
 
 :root {
-  /* Brand palette based on AirportCarWala design */
-  --primary-blue: #093cb5;
-  --deep-blue: #031b5c;
-  --electric-blue: #1c56ed;
-  --accent-cyan: #00d2ff;
-  --accent-yellow: #ffc300;
-  
-  /* Neutral shades */
-  --bg-dark: #020b24;
-  --bg-card: rgba(6, 26, 75, 0.7);
+  /* Strict Monochrome / Black & White Palette */
+  --bg-black: #000000;
+  --bg-dark: #0a0a0a;
+  --bg-card: #121212;
+  --bg-elevated: #1a1a1a;
+  --bg-subtle: #242424;
+
+  /* Text & Border Shades */
   --text-white: #ffffff;
-  --text-light: #e0e7ff;
-  --text-muted: #8ba2d4;
+  --text-silver: #e2e8f0;
+  --text-muted: #94a3b8;
+  --text-dim: #64748b;
   --border-glass: rgba(255, 255, 255, 0.15);
-  --border-light: rgba(255, 255, 255, 0.3);
-  
+  --border-light: rgba(255, 255, 255, 0.35);
+  --border-strong: #ffffff;
+
   /* Typography */
+  --font-script: 'Pacifico', cursive;
   --font-heading: 'Montserrat', sans-serif;
   --font-body: 'Poppins', sans-serif;
-  
+
   /* Transitions */
-  --transition-smooth: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-smooth: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
   --transition-fast: all 0.2s ease;
 }
 
@@ -38,7 +39,7 @@
 html, body {
   width: 100%;
   min-height: 100vh;
-  background-color: var(--bg-dark);
+  background-color: var(--bg-black);
   color: var(--text-white);
   font-family: var(--font-body);
   overflow-x: hidden;
@@ -66,4 +67,3 @@ img, video {
   max-width: 100%;
   display: block;
 }
-
