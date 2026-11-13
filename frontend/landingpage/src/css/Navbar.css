@@ -1,0 +1,158 @@
+/* ==========================================================================
+   NAVBAR COMPONENT STYLES (BLACK & WHITE THEME)
+   ========================================================================== */
+
+.navbar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 100;
+  padding: 30px 60px;
+  background: transparent;
+  user-select: none;
+}
+
+.navbar__container {
+  width: 100%;
+  max-width: 1800px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* Brand logo styling */
+.navbar__brand {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.navbar__brand:hover {
+  opacity: 0.85;
+}
+
+.navbar__logo-icon {
+  width: 52px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.navbar__brand-name {
+  font-family: var(--font-script);
+  font-weight: 400;
+  font-size: 1.85rem;
+  color: #ffffff;
+  border-left: 2px solid rgba(255, 255, 255, 0.4);
+  padding-left: 16px;
+  line-height: 1;
+  text-shadow: 
+    2px 2px 0 #000000, 
+    3px 3px 6px rgba(0, 0, 0, 0.8);
+}
+
+/* Nav links styling: Clean, spaced, high-contrast monochrome */
+.navbar__nav {
+  display: flex;
+  align-items: center;
+  gap: 52px;
+}
+
+.navbar__link {
+  font-family: var(--font-heading);
+  font-size: 1.05rem;
+  font-weight: 500;
+  color: #999999;
+  transition: color 0.25s ease, transform 0.15s ease;
+  letter-spacing: 0.04em;
+  position: relative;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 6px 4px;
+  outline: none;
+}
+
+.navbar__link:hover {
+  color: #ffffff;
+}
+
+/* Active link highlight with glowing underline matching the screenshot */
+.navbar__link--active {
+  color: #ffffff !important;
+  font-weight: 700;
+}
+
+.navbar__link--active::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  width: 100%;
+  height: 2.8px;
+  background: #ffffff;
+  border-radius: 2px;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.8), 0 0 4px rgba(255, 255, 255, 1);
+}
+
+.navbar__link--btn {
+  background: transparent;
+  font-family: inherit;
+  font-size: inherit;
+}
+
+.navbar__right {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+/* Hamburger icon in pure white */
+.navbar__hamburger {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 28px;
+  height: 18px;
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0;
+}
+
+.navbar__hamburger-bar {
+  display: block;
+  height: 2.8px;
+  width: 100%;
+  background-color: #ffffff;
+  border-radius: 2px;
+  transition: all 0.3s ease;
+}
+
+.navbar__hamburger-bar:nth-child(2) {
+  width: 80%;
+  align-self: flex-end;
+}
+
+.navbar__hamburger-bar:nth-child(3) {
+  width: 100%;
+}
+
+.navbar__hamburger:hover .navbar__hamburger-bar {
+  background-color: #ffffff;
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
+}
+
+@media (max-width: 950px) {
+  .navbar {
+    padding: 20px 24px;
+  }
+  .navbar__nav {
+    gap: 28px;
+  }
+}

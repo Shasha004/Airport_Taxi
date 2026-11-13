@@ -1,68 +1,12 @@
+# Airport Taxi - Ride Offers Platform
 
+Platform for connecting airport travelers with taxi suppliers for negotiated ride offers. Built for the Intern Hackathon (Problem 2).
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# Airport Taxi → Ride Offers (Part 1: Project Foundation + Traveler Module)
-
-A full-stack platform connecting airport arrivals with transparent, rule-validated taxi offers.
+## Features
+- **Traveler Flow (Part 1 - Complete)**: Select arrival flight & hotel from catalog, see suggested route price ranges, post ride requests with custom offer prices within inclusive boundaries, and view request statuses on the dashboard.
+- **Supplier Flow (Part 2 - Upcoming)**: View eligible ride requests based on airport/operating area/hours, assign cars within the route price limits, and handle booking updates.
+- **Rules Engine (R1, R2, R3)**: Validates passenger capacity, bag constraints, airport-city connectivity, pickup lead times, and car availability windows.
+- **Booking & Changes**: Generates a 10-digit booking reference and handles flight/pickup change requests.
 
 ## Tech Stack
 - **Backend:** Node.js, Express.js (REST APIs)
@@ -104,7 +48,7 @@ npm test
 
 ---
 
-## Implemented Architecture
+## Project Structure
 
 ```text
 Airport_Taxi/
@@ -124,6 +68,9 @@ Airport_Taxi/
 │   │   ├── main.jsx                     # Vite React entry point with BrowserRouter
 │   │   └── index.css                    # Modern UI styles & responsive layout
 │   └── package.json
+│
+├── frontend/                            # Standalone landing page assets & components
+│   └── landingpage/
 │
 ├── backend/                             # Backend Node.js + Express + SQLite server
 │   ├── src/
@@ -166,6 +113,7 @@ Airport_Taxi/
 │       ├── routes.json
 │       ├── booked_rides.json
 │       └── open_requests.json
+├── problem-statement/                   # Original hackathon problem statement documents
 ├── DATA_DICTIONARY.md
 ├── FRONTEND_SPECIFICATION.md
 ├── FRONTEND_SPECIFICATION.txt
