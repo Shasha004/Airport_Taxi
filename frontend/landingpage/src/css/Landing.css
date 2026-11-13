@@ -1,5 +1,5 @@
 /* ==========================================================================
-   LANDING PAGE — 50/50 SPLIT (CONTENT LEFT / CAR VIDEO RIGHT)
+   LANDING PAGE — SINGLE COLUMN (TEXT CONTENT ONLY)
    ========================================================================== */
 
 .landing-app {
@@ -7,10 +7,10 @@
   background: var(--white);
 }
 
-/* ---------- 50/50 SPLIT WRAPPER ---------- */
+/* ---------- FULL WIDTH LAYOUT ---------- */
 .lp {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;
   min-height: calc(100vh - 68px); /* minus navbar height */
 }
 
@@ -21,40 +21,6 @@
   overflow-y: auto;
   padding: 0;
   background: var(--white);
-}
-
-/* RIGHT HALF: full-screen car video on black */
-.lp__right {
-  position: sticky;
-  top: 68px; /* below navbar */
-  align-self: start;
-  height: calc(100vh - 68px);
-  background: #000000;
-  overflow: hidden;
-}
-
-.lp__video-wrap {
-  position: relative;
-  width: 100%;
-  height: 100%;
-}
-
-.lp__video {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-
-.lp__video-glow {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background: radial-gradient(
-    ellipse at 65% 55%,
-    rgba(80, 130, 255, 0.2) 0%,
-    transparent 55%
-  );
 }
 
 /* ---------- HERO ---------- */
@@ -214,13 +180,6 @@
 @media (max-width: 400px) {
   .lp {
     grid-template-columns: 1fr;
-  }
-
-  .lp__right {
-    position: relative;
-    top: 0;
-    height: 320px;
-    order: -1;
   }
 
   .lp-roles__grid,

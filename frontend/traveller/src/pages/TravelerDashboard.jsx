@@ -44,12 +44,7 @@ function RideCard({ req }) {
       <div className="ride__top">
         <span className="badge">{req.id}</span>
         <span className="pill">{req.travelerName}</span>
-        <span className={req.status === 'CONFIRMED' ? 'pill pill--dot' : 'pill pill--pulse'}>
-          {req.status === 'CONFIRMED' ? '● CONFIRMED' : '● ' + req.status}
-        </span>
-        {req.bookingCode && (
-          <span className="badge badge--fill">Booking #{req.bookingCode}</span>
-        )}
+        <span className="pill pill--pulse">&#9679; {req.status}</span>
       </div>
 
       {/* Dashed Route Box */}
@@ -89,12 +84,6 @@ function RideCard({ req }) {
           <label>DRIVE</label>
           <span>~{route.drive_minutes} mins ({route.distance_km} km)</span>
         </div>
-        {req.assignedSupplier && (
-          <div>
-            <label>ASSIGNED SUPPLIER</label>
-            <span>{req.assignedSupplier} ({req.assignedCar})</span>
-          </div>
-        )}
       </div>
 
       {/* Price Footer */}
@@ -204,4 +193,3 @@ function TravelerDashboard({ onNavigate }) {
 }
 
 export default TravelerDashboard;
-

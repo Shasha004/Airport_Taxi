@@ -54,7 +54,6 @@ function CreateRidePage({ onNavigate }) {
   }, []);
 
   const selectedFlight = flights.find((f) => f.id === form.flightId);
-  const selectedHotel = hotels.find((h) => h.id === form.hotelId);
 
   // Compute Route Price Bounds (Rule R3)
   useEffect(() => {
@@ -106,7 +105,7 @@ function CreateRidePage({ onNavigate }) {
     setSubmitting(false);
 
     if (res.ok) {
-      onNavigate('traveler');
+      onNavigate('dashboard');
     } else {
       setError(res.error || 'Failed to submit ride request.');
     }
@@ -116,7 +115,7 @@ function CreateRidePage({ onNavigate }) {
     <div className="page create-page">
       <div className="container create__wrap">
         <div className="create__head">
-          <button type="button" className="create__back" onClick={() => onNavigate('traveler')}>
+          <button type="button" className="create__back" onClick={() => onNavigate('dashboard')}>
             &larr; Back to Dashboard
           </button>
           <div className="create__title-box">
@@ -291,7 +290,7 @@ function CreateRidePage({ onNavigate }) {
             <button
               type="button"
               className="btn btn--ghost"
-              onClick={() => onNavigate('traveler')}
+              onClick={() => onNavigate('dashboard')}
             >
               Cancel
             </button>
@@ -310,4 +309,3 @@ function CreateRidePage({ onNavigate }) {
 }
 
 export default CreateRidePage;
-

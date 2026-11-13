@@ -1,5 +1,5 @@
 /* ==========================================================================
-   CREATE RIDE PAGE STYLES (BLACK & WHITE MINIMALIST)
+   CREATE RIDE PAGE STYLES - TRAVELER PORTAL
    ========================================================================== */
 
 .create-page {
@@ -112,4 +112,3 @@
     grid-template-columns: 1fr;
   }
 }
-

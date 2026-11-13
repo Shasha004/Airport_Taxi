@@ -1,9 +1,6 @@
 import React, { useState } from 'react';
 import Navbar from '../components/Navbar.jsx';
-import TravelerDashboard from './TravelerDashboard.jsx';
 import CabownerDashboard from './CabownerDashboard.jsx';
-import CreateRidePage from './CreateRidePage.jsx';
-import rotatingCarVideo from '../image/Blue_sports_car_rotating_075f9c82.mp4';
 import '../css/Landing.css';
 
 const rules = [
@@ -47,37 +44,20 @@ function FeatureList({ items }) {
   );
 }
 
-function getInitialTab() {
-  const hash = window.location.hash.replace('#', '');
-  if (['landing', 'traveler', 'cabowner', 'create'].includes(hash)) {
-    return hash;
-  }
-  return 'landing';
-}
-
 function Landing() {
-  // activeTab: 'landing' | 'traveler' | 'cabowner' | 'create'
-  const [activeTab, setActiveTab] = useState(getInitialTab);
-
-  const handleNavigate = (tab) => {
-    setActiveTab(tab);
-    window.location.hash = tab === 'landing' ? '' : tab;
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
+  // activeTab: 'landing' | 'cabowner'
+  const [activeTab, setActiveTab] = useState('landing');
 
   return (
     <div className="landing-app">
-      {/* Top Universal Navbar matching the Screenshot */}
-      <Navbar activeTab={activeTab} onNavigate={handleNavigate} />
+      {/* Top Universal Navbar with link to Traveller module */}
+      <Navbar activeTab={activeTab} onNavigate={setActiveTab} />
 
-      {/* View Switcher */}
-      {activeTab === 'landing' && (
+      {activeTab === 'landing' ? (
         <div className="lp">
-          {/* LEFT HALF: hero, role cards, rules */}
-          <div className="lp__left">
           {/* Hero Section */}
           <section className="lp-hero">
-            <div className="lp-hero__inner">
+            <div className="container lp-hero__inner">
               <span className="badge badge--fill lp-hero__badge">
                 Airport Ride Offers Platform &bull; Problem 2
               </span>
@@ -89,17 +69,16 @@ function Landing() {
                 Compare, book, and receive a 10-digit booking number &mdash; all with zero hidden fees.
               </p>
               <div className="lp-hero__actions">
-                <button
-                  type="button"
+                <a
+                  href="http://localhost:5174/"
                   className="btn btn--solid"
-                  onClick={() => handleNavigate('traveler')}
                 >
-                  Enter as Traveler
-                </button>
+                  Enter as Traveler &rarr;
+                </a>
                 <button
                   type="button"
                   className="btn btn--ghost"
-                  onClick={() => handleNavigate('cabowner')}
+                  onClick={() => setActiveTab('cabowner')}
                 >
                   Enter as Cab Owner
                 </button>
@@ -108,9 +87,9 @@ function Landing() {
           </section>
 
           {/* Role Cards Section */}
-          <section className="lp-roles">
+          <section className="container lp-roles">
             <div className="lp-roles__grid">
-              {/* Traveler Card */}
+              {/* Traveler Card: Links directly to the separate Traveler module */}
               <article className="card lp-card">
                 <div className="lp-card__top">
                   <span className="badge">Traveler Role</span>
@@ -119,13 +98,12 @@ function Landing() {
                 <h2 className="lp-card__title">Traveler Portal</h2>
                 <p className="lp-card__sub">Family &amp; Business Airport Transfers (Menon Family Demo)</p>
                 <FeatureList items={travelerFeatures} />
-                <button
-                  type="button"
+                <a
+                  href="http://localhost:5174/"
                   className="btn btn--solid lp-card__cta"
-                  onClick={() => handleNavigate('traveler')}
                 >
-                  Go to Traveler Dashboard
-                </button>
+                  Open Traveler Portal &rarr;
+                </a>
               </article>
 
               {/* Cab Owner Card */}
@@ -140,7 +118,7 @@ function Landing() {
                 <button
                   type="button"
                   className="btn btn--solid lp-card__cta"
-                  onClick={() => handleNavigate('cabowner')}
+                  onClick={() => setActiveTab('cabowner')}
                 >
                   Go to Cabowner Dashboard
                 </button>
@@ -150,46 +128,22 @@ function Landing() {
 
           {/* Hackathon Rules Section */}
           <section className="lp-rules">
-            <h2 className="lp-rules__head">System Rules Enforced for Every Ride</h2>
-            <div className="lp-rules__grid">
-              {rules.map((r) => (
-                <article className="card lp-rule" key={r.code}>
-                  <span className="lp-rule__code">{r.code}</span>
-                  <h3 className="lp-rule__title">{r.title}</h3>
-                  <p className="lp-rule__text">{r.text}</p>
-                </article>
-              ))}
+            <div className="container">
+              <h2 className="lp-rules__head">System Rules Enforced for Every Ride</h2>
+              <div className="lp-rules__grid">
+                {rules.map((r) => (
+                  <article className="card lp-rule" key={r.code}>
+                    <span className="lp-rule__code">{r.code}</span>
+                    <h3 className="lp-rule__title">{r.title}</h3>
+                    <p className="lp-rule__text">{r.text}</p>
+                  </article>
+                ))}
+              </div>
             </div>
           </section>
-          </div>
-
-          {/* RIGHT HALF: full-screen car video */}
-          <div className="lp__right">
-            <div className="lp__video-wrap">
-              <video
-                src={rotatingCarVideo}
-                autoPlay
-                loop
-                muted
-                playsInline
-                className="lp__video"
-              />
-              <div className="lp__video-glow" />
-            </div>
-          </div>
         </div>
-      )}
-
-      {activeTab === 'traveler' && (
-        <TravelerDashboard onNavigate={handleNavigate} />
-      )}
-
-      {activeTab === 'cabowner' && (
-        <CabownerDashboard onNavigate={handleNavigate} />
-      )}
-
-      {activeTab === 'create' && (
-        <CreateRidePage onNavigate={handleNavigate} />
+      ) : (
+        <CabownerDashboard onNavigate={setActiveTab} />
       )}
     </div>
   );
