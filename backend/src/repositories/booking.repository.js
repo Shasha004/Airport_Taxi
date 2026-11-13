@@ -123,7 +123,9 @@ class BookingRepository {
       db.prepare("UPDATE bookings SET status = 'cancelled' WHERE id = ?").run(bookingId);
       // 2. Restore offer to 'assigned' so the request can be re-offered
       db.prepare("UPDATE offers SET status = 'assigned' WHERE id = ?").run(offerId);
-      // 3. Re-open the ride request
+      // 3. Restore other offers for this request that were not chosen
+      db.prepare("UPDATE offers SET status = 'assigned' WHERE request_id = ? AND status = 'not_chosen'").run(requestId);
+      // 4. Re-open the ride request
       db.prepare("UPDATE ride_requests SET status = 'open' WHERE id = ?").run(requestId);
     });
     transaction();
