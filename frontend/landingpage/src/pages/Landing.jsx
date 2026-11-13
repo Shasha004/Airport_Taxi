@@ -46,14 +46,28 @@ function FeatureList({ items }) {
   );
 }
 
+function getInitialTab() {
+  const hash = window.location.hash.replace('#', '');
+  if (['landing', 'traveler', 'cabowner', 'create'].includes(hash)) {
+    return hash;
+  }
+  return 'landing';
+}
+
 function Landing() {
   // activeTab: 'landing' | 'traveler' | 'cabowner' | 'create'
-  const [activeTab, setActiveTab] = useState('traveler');
+  const [activeTab, setActiveTab] = useState(getInitialTab);
+
+  const handleNavigate = (tab) => {
+    setActiveTab(tab);
+    window.location.hash = tab === 'landing' ? '' : tab;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   return (
     <div className="landing-app">
       {/* Top Universal Navbar matching the Screenshot */}
-      <Navbar activeTab={activeTab} onNavigate={setActiveTab} />
+      <Navbar activeTab={activeTab} onNavigate={handleNavigate} />
 
       {/* View Switcher */}
       {activeTab === 'landing' && (
@@ -75,14 +89,14 @@ function Landing() {
                 <button
                   type="button"
                   className="btn btn--solid"
-                  onClick={() => setActiveTab('traveler')}
+                  onClick={() => handleNavigate('traveler')}
                 >
                   Enter as Traveler
                 </button>
                 <button
                   type="button"
                   className="btn btn--ghost"
-                  onClick={() => setActiveTab('cabowner')}
+                  onClick={() => handleNavigate('cabowner')}
                 >
                   Enter as Cab Owner
                 </button>
@@ -105,7 +119,7 @@ function Landing() {
                 <button
                   type="button"
                   className="btn btn--solid lp-card__cta"
-                  onClick={() => setActiveTab('traveler')}
+                  onClick={() => handleNavigate('traveler')}
                 >
                   Go to Traveler Dashboard
                 </button>
@@ -123,7 +137,7 @@ function Landing() {
                 <button
                   type="button"
                   className="btn btn--solid lp-card__cta"
-                  onClick={() => setActiveTab('cabowner')}
+                  onClick={() => handleNavigate('cabowner')}
                 >
                   Go to Cabowner Dashboard
                 </button>
@@ -150,15 +164,15 @@ function Landing() {
       )}
 
       {activeTab === 'traveler' && (
-        <TravelerDashboard onNavigate={setActiveTab} />
+        <TravelerDashboard onNavigate={handleNavigate} />
       )}
 
       {activeTab === 'cabowner' && (
-        <CabownerDashboard onNavigate={setActiveTab} />
+        <CabownerDashboard onNavigate={handleNavigate} />
       )}
 
       {activeTab === 'create' && (
-        <CreateRidePage onNavigate={setActiveTab} />
+        <CreateRidePage onNavigate={handleNavigate} />
       )}
     </div>
   );

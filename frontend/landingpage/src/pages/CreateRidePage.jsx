@@ -310,3 +310,4 @@ function CreateRidePage({ onNavigate }) {
 }
 
 export default CreateRidePage;
+

@@ -58,3 +58,4 @@ function Navbar({ activeTab = 'traveler', onNavigate }) {
 }
 
 export default Navbar;
+

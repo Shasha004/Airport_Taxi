@@ -1,0 +1,355 @@
+/* ==========================================================================
+   BOOKING MODAL — BLACK & WHITE THEME
+   ========================================================================== */
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.7);
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.modal-container {
+  width: 100%;
+  max-width: 720px;
+  max-height: 90vh;
+  overflow-y: auto;
+  background: var(--white);
+  border: 2px solid var(--line);
+  border-radius: 14px;
+  box-shadow: 8px 8px 0 var(--line);
+}
+
+/* ---------- Header ---------- */
+.modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 22px 26px;
+  border-bottom: 2px solid var(--line);
+  position: sticky;
+  top: 0;
+  background: var(--white);
+  z-index: 1;
+}
+
+.modal-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border: 2px solid var(--line);
+  border-radius: 999px;
+  background: var(--black);
+  color: var(--white);
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+}
+
+.modal-title {
+  margin-top: 8px;
+  font-size: 1.4rem;
+}
+
+.modal-close {
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border: 2px solid var(--line);
+  border-radius: 8px;
+  background: var(--white);
+  font-size: 1.4rem;
+  font-weight: 800;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s ease;
+}
+
+.modal-close:hover {
+  background: var(--black);
+  color: var(--white);
+}
+
+/* ---------- Body ---------- */
+.modal-body {
+  padding: 24px 26px;
+}
+
+.booking-form {
+  display: grid;
+  gap: 22px;
+}
+
+.form-section {
+  padding: 18px;
+  border: 2px solid var(--line);
+  border-radius: 10px;
+  background: var(--paper);
+}
+
+.section-title {
+  font-size: 1rem;
+  margin-bottom: 14px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-group label {
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.form-group input,
+.form-group select {
+  padding: 10px 12px;
+  border: 2px solid var(--line);
+  border-radius: 8px;
+  background: var(--white);
+  font-size: 0.92rem;
+  font-family: inherit;
+  outline: none;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  box-shadow: 3px 3px 0 var(--line);
+}
+
+.form-group small {
+  font-size: 0.76rem;
+  color: var(--muted);
+}
+
+.counter-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 12px;
+  border: 2px solid var(--line);
+  border-radius: 8px;
+  background: var(--white);
+  font-size: 0.9rem;
+}
+
+.price-tag-box {
+  padding: 10px 12px;
+  border: 2px solid var(--line);
+  border-radius: 8px;
+  background: var(--white);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.price-range {
+  font-weight: 800;
+  font-size: 1rem;
+}
+
+.route-info {
+  font-size: 0.76rem;
+  color: var(--muted);
+}
+
+.input-error {
+  border-color: #000 !important;
+  background: #f4f4f4 !important;
+}
+
+.input-valid {
+  border-color: var(--line) !important;
+}
+
+.text-danger {
+  color: #000;
+  font-weight: 700;
+}
+
+.text-success {
+  color: #000;
+  font-weight: 700;
+}
+
+/* Car type pills */
+.car-type-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.type-pill {
+  padding: 7px 16px;
+  border: 2px solid var(--line);
+  border-radius: 999px;
+  background: var(--white);
+  font-weight: 700;
+  font-size: 0.82rem;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.type-pill--active {
+  background: var(--black);
+  color: var(--white);
+}
+
+/* Error banner */
+.modal-error-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  border: 2px solid var(--line);
+  border-radius: 8px;
+  background: #f4f4f4;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+/* Actions */
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.btn-primary,
+.btn-secondary {
+  padding: 11px 22px;
+  border: 2px solid var(--line);
+  border-radius: 8px;
+  font-weight: 800;
+  font-size: 0.9rem;
+  cursor: pointer;
+  font-family: inherit;
+  box-shadow: var(--shadow);
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+
+.btn-primary {
+  background: var(--black);
+  color: var(--white);
+}
+
+.btn-secondary {
+  background: var(--white);
+  color: var(--black);
+}
+
+.btn-primary:hover,
+.btn-secondary:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 5px 5px 0 var(--line);
+}
+
+/* ---------- Success view ---------- */
+.booking-success-view {
+  display: grid;
+  gap: 20px;
+}
+
+.success-badge {
+  text-align: center;
+}
+
+.success-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: var(--black);
+  color: var(--white);
+  font-size: 1.8rem;
+  font-weight: 800;
+}
+
+.success-badge h3 {
+  margin-top: 12px;
+  font-size: 1.3rem;
+}
+
+.booking-code-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 20px;
+  border: 2px solid var(--line);
+  border-radius: 10px;
+  background: var(--paper);
+  text-align: center;
+  box-shadow: var(--shadow);
+}
+
+.code-label {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  color: var(--muted);
+}
+
+.code-number {
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  color: var(--black);
+}
+
+.booking-code-card small {
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.summary-list {
+  display: grid;
+  gap: 10px;
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--line-soft);
+  font-size: 0.9rem;
+}
+
+.summary-row span {
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.summary-row strong {
+  text-align: right;
+}
+
+.text-highlight {
+  font-size: 1.1rem;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 600px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+}
