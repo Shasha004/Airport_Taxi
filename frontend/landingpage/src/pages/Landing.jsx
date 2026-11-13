@@ -3,6 +3,7 @@ import Navbar from '../components/Navbar.jsx';
 import TravelerDashboard from './TravelerDashboard.jsx';
 import CabownerDashboard from './CabownerDashboard.jsx';
 import CreateRidePage from './CreateRidePage.jsx';
+import rotatingCarVideo from '../image/Blue_sports_car_rotating_075f9c82.mp4';
 import '../css/Landing.css';
 
 const rules = [
@@ -72,9 +73,11 @@ function Landing() {
       {/* View Switcher */}
       {activeTab === 'landing' && (
         <div className="lp">
+          {/* LEFT HALF: hero, role cards, rules */}
+          <div className="lp__left">
           {/* Hero Section */}
           <section className="lp-hero">
-            <div className="container lp-hero__inner">
+            <div className="lp-hero__inner">
               <span className="badge badge--fill lp-hero__badge">
                 Airport Ride Offers Platform &bull; Problem 2
               </span>
@@ -105,7 +108,7 @@ function Landing() {
           </section>
 
           {/* Role Cards Section */}
-          <section className="container lp-roles">
+          <section className="lp-roles">
             <div className="lp-roles__grid">
               {/* Traveler Card */}
               <article className="card lp-card">
@@ -147,19 +150,33 @@ function Landing() {
 
           {/* Hackathon Rules Section */}
           <section className="lp-rules">
-            <div className="container">
-              <h2 className="lp-rules__head">System Rules Enforced for Every Ride</h2>
-              <div className="lp-rules__grid">
-                {rules.map((r) => (
-                  <article className="card lp-rule" key={r.code}>
-                    <span className="lp-rule__code">{r.code}</span>
-                    <h3 className="lp-rule__title">{r.title}</h3>
-                    <p className="lp-rule__text">{r.text}</p>
-                  </article>
-                ))}
-              </div>
+            <h2 className="lp-rules__head">System Rules Enforced for Every Ride</h2>
+            <div className="lp-rules__grid">
+              {rules.map((r) => (
+                <article className="card lp-rule" key={r.code}>
+                  <span className="lp-rule__code">{r.code}</span>
+                  <h3 className="lp-rule__title">{r.title}</h3>
+                  <p className="lp-rule__text">{r.text}</p>
+                </article>
+              ))}
             </div>
           </section>
+          </div>
+
+          {/* RIGHT HALF: full-screen car video */}
+          <div className="lp__right">
+            <div className="lp__video-wrap">
+              <video
+                src={rotatingCarVideo}
+                autoPlay
+                loop
+                muted
+                playsInline
+                className="lp__video"
+              />
+              <div className="lp__video-glow" />
+            </div>
+          </div>
         </div>
       )}
 
