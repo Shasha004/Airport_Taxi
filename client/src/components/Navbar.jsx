@@ -1,11 +1,13 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Car, Plane, Home, PlusCircle, LayoutDashboard } from 'lucide-react';
+import { Car, Plane, Home, PlusCircle, LayoutDashboard, Building2, Ticket } from 'lucide-react';
 
 export default function Navbar() {
   const location = useLocation();
 
   const isActive = (path) => location.pathname === path;
+  const isSupplierActive = location.pathname.startsWith('/supplier');
+  const isTravelerActive = location.pathname.startsWith('/traveler') && location.pathname !== '/traveler/create';
 
   return (
     <header className="navbar">
@@ -31,21 +33,34 @@ export default function Navbar() {
           </Link>
           <Link
             to="/traveler"
-            className={`nav-link ${isActive('/traveler') ? 'active' : ''}`}
+            className={`nav-link ${isTravelerActive ? 'active' : ''}`}
           >
             <LayoutDashboard size={16} />
-            <span>Traveler Dashboard</span>
+            <span>Traveler</span>
+          </Link>
+          <Link
+            to="/supplier"
+            className={`nav-link ${isSupplierActive ? 'active' : ''}`}
+          >
+            <Building2 size={16} />
+            <span>Supplier Portal</span>
+          </Link>
+          <Link
+            to="/traveler/booking"
+            className={`nav-link ${isActive('/traveler/booking') ? 'active' : ''}`}
+          >
+            <Ticket size={16} />
+            <span>Lookup Booking</span>
           </Link>
           <Link
             to="/traveler/create"
             className={`nav-btn ${isActive('/traveler/create') ? 'active' : ''}`}
           >
             <PlusCircle size={16} />
-            <span>Post Ride Request</span>
+            <span>Post Request</span>
           </Link>
         </nav>
       </div>
     </header>
   );
 }
-

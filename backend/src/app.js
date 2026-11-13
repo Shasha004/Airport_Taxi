@@ -6,6 +6,10 @@ const fs = require('fs');
 const catalogRoutes = require('./routes/catalog.routes');
 const routeRoutes = require('./routes/route.routes');
 const rideRequestRoutes = require('./routes/rideRequest.routes');
+const supplierRoutes = require('./routes/supplier.routes');
+const offerRoutes = require('./routes/offer.routes');
+const bookingRoutes = require('./routes/booking.routes');
+const changeRequestRoutes = require('./routes/changeRequest.routes');
 const errorHandler = require('./middleware/errorHandler');
 
 const app = express();
@@ -19,10 +23,14 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', service: 'Airport Taxi Backend', timestamp: new Date().toISOString() });
 });
 
-// API Routes
+// API Routes (Part 1 & Part 2)
 app.use('/api/catalog', catalogRoutes);
 app.use('/api/routes', routeRoutes);
 app.use('/api/ride-requests', rideRequestRoutes);
+app.use('/api/suppliers', supplierRoutes);
+app.use('/api/offers', offerRoutes);
+app.use('/api/bookings', bookingRoutes);
+app.use('/api/change-requests', changeRequestRoutes);
 
 // Serve static frontend build if it exists
 const clientDistPath = path.resolve(__dirname, '../../client/dist');

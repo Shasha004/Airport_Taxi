@@ -17,13 +17,15 @@ function connectDatabase(dbPath) {
   db = new Database(resolvedPath, { verbose: process.env.DB_VERBOSE === 'true' ? console.log : null });
   // Enable WAL mode for better concurrency and performance
   db.pragma('journal_mode = WAL');
+  // Enable foreign keys
+  db.pragma('foreign_keys = ON');
   return db;
 }
 
 function initializeDatabase(dbPath) {
   const database = connectDatabase(dbPath);
 
-  // Initial table as per specification
+  // Table 1: ride_requests (from Part 1)
   database.exec(`
     CREATE TABLE IF NOT EXISTS ride_requests (
       id TEXT PRIMARY KEY,
@@ -39,6 +41,55 @@ function initializeDatabase(dbPath) {
       traveler_price REAL NOT NULL,
       status TEXT DEFAULT 'open',
       created_at TEXT DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+
+  // Table 2: offers (Part 2)
+  database.exec(`
+    CREATE TABLE IF NOT EXISTS offers (
+      id TEXT PRIMARY KEY,
+      request_id TEXT NOT NULL,
+      supplier_id TEXT NOT NULL,
+      car_id TEXT NOT NULL,
+      offer_price REAL NOT NULL,
+      status TEXT DEFAULT 'assigned',
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (request_id) REFERENCES ride_requests(id)
+    );
+  `);
+
+  // Table 3: bookings (Part 2)
+  database.exec(`
+    CREATE TABLE IF NOT EXISTS bookings (
+      id TEXT PRIMARY KEY,
+      booking_number TEXT UNIQUE NOT NULL,
+      request_id TEXT NOT NULL,
+      offer_id TEXT NOT NULL,
+      supplier_id TEXT NOT NULL,
+      car_id TEXT NOT NULL,
+      flight_id TEXT NOT NULL,
+      hotel_id TEXT NOT NULL,
+      pickup_at TEXT NOT NULL,
+      drive_minutes INTEGER NOT NULL,
+      price REAL NOT NULL,
+      status TEXT DEFAULT 'confirmed',
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (request_id) REFERENCES ride_requests(id),
+      FOREIGN KEY (offer_id) REFERENCES offers(id)
+    );
+  `);
+
+  // Table 4: change_requests (Part 2)
+  database.exec(`
+    CREATE TABLE IF NOT EXISTS change_requests (
+      id TEXT PRIMARY KEY,
+      booking_id TEXT NOT NULL,
+      new_flight_id TEXT,
+      new_pickup_at TEXT,
+      status TEXT DEFAULT 'pending',
+      supplier_response TEXT,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (booking_id) REFERENCES bookings(id)
     );
   `);
 
@@ -79,7 +130,7 @@ function initializeDatabase(dbPath) {
     console.warn(`[Database] Seeding initial open requests failed or skipped:`, err.message);
   }
 
-  console.log('[Database] Database initialized successfully.');
+  console.log('[Database] Database initialized successfully with Part 1 and Part 2 tables.');
   return database;
 }
 
@@ -94,5 +145,7 @@ module.exports = {
   connectDatabase,
   initializeDatabase,
   getDatabase,
+  get db() {
+    return getDatabase();
+  }
 };
-

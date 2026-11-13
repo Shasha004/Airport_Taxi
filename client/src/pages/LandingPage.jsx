@@ -45,17 +45,18 @@ export default function LandingPage() {
           subtitle="Fleet Management & Ride Matching"
           description="Taxi operators view open traveler requests eligible for their operational airports, schedule slots, and vehicle capacity."
           icon={Building2}
-          badgeText="Coming in Part 2"
-          badgeType="upcoming"
-          buttonText="Supplier Portal (Part 2)"
-          disabled={true}
+          badgeText="Active • Part 2"
+          badgeType="active"
+          buttonText="Enter as Taxi Supplier"
+          highlight={true}
+          disabled={false}
           features={[
             'Operational airport & service area filtering (R4)',
             'Vehicle seating and luggage fit matching (R5)',
             'Overlap-free busy window scheduling (R6)',
             'Competitive offer assignment & bidding (R7)',
           ]}
-          onClick={() => {}}
+          onClick={() => navigate('/supplier')}
         />
       </section>
 

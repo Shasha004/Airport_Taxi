@@ -56,5 +56,52 @@ export const rideRequestApi = {
   },
 };
 
-export default api;
+export const supplierApi = {
+  getSupplierRequests: async (supplierId) => {
+    const res = await api.get(`/suppliers/${supplierId}/requests`);
+    return res.data;
+  },
+};
 
+export const offerApi = {
+  createOffer: async (requestId, payload) => {
+    const res = await api.post(`/offers/requests/${requestId}`, payload);
+    return res.data;
+  },
+  getOffers: async (requestId) => {
+    const res = await api.get(`/offers/requests/${requestId}`);
+    return res.data;
+  },
+  rejectOffer: async (offerId) => {
+    const res = await api.post(`/offers/${offerId}/reject`);
+    return res.data;
+  },
+};
+
+export const bookingApi = {
+  bookOffer: async (offerId) => {
+    const res = await api.post(`/bookings/offers/${offerId}`);
+    return res.data;
+  },
+  getBooking: async (bookingNumber) => {
+    const res = await api.get(`/bookings/${bookingNumber}`);
+    return res.data;
+  },
+};
+
+export const changeRequestApi = {
+  createChangeRequest: async (bookingNumber, payload) => {
+    const res = await api.post(`/change-requests/${bookingNumber}`, payload);
+    return res.data;
+  },
+  getSupplierChangeRequests: async (supplierId) => {
+    const res = await api.get(`/change-requests/supplier/${supplierId}`);
+    return res.data;
+  },
+  reviewChangeRequest: async (changeRequestId, payload) => {
+    const res = await api.patch(`/change-requests/${changeRequestId}`, payload);
+    return res.data;
+  },
+};
+
+export default api;

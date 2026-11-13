@@ -1,6 +1,6 @@
 const assert = require('assert');
 const app = require('../src/app');
-const { initializeDatabase } = require('../src/config/database');
+const { initializeDatabase, getDatabase } = require('../src/config/database');
 const { loadAllData } = require('../src/data/loader');
 const http = require('http');
 
@@ -43,6 +43,11 @@ function request(path, options = {}) {
 async function runTests() {
   console.log('--- Starting Integration & Rule Tests ---');
   loadAllData();
+  const db = getDatabase();
+  db.prepare('DELETE FROM change_requests').run();
+  db.prepare('DELETE FROM bookings').run();
+  db.prepare('DELETE FROM offers').run();
+  db.prepare("DELETE FROM ride_requests WHERE id NOT IN ('REQ-0001', 'REQ-0002', 'REQ-0003')").run();
   initializeDatabase();
 
   server = app.listen(0);

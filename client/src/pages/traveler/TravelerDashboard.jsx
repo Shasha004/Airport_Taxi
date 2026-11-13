@@ -290,6 +290,16 @@ export default function TravelerDashboard() {
                     </div>
                   )}
                 </div>
+
+                <div className="card-action-bar">
+                  <Link
+                    to={`/traveler/offers/${req.id}`}
+                    className="btn-primary w-full"
+                  >
+                    <span>View Supplier Offers</span>
+                    <Car size={16} />
+                  </Link>
+                </div>
               </div>
             );
           })}
