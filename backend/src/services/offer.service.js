@@ -92,3 +92,4 @@ class OfferService {
 }
 
 module.exports = new OfferService();
+

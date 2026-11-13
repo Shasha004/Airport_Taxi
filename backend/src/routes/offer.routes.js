@@ -7,3 +7,4 @@ router.get('/requests/:requestId', offerController.getOffers);
 router.post('/:offerId/reject', offerController.rejectOffer);
 
 module.exports = router;
+

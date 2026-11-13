@@ -47,3 +47,4 @@ class ChangeRequestController {
 }
 
 module.exports = new ChangeRequestController();
+

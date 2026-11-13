@@ -118,3 +118,4 @@ class BookingRepository {
 }
 
 module.exports = new BookingRepository();
+

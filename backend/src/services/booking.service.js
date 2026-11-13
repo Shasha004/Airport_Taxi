@@ -160,3 +160,4 @@ class BookingService {
 }
 
 module.exports = new BookingService();
+

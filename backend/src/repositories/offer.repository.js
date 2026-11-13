@@ -85,3 +85,4 @@ class OfferRepository {
 }
 
 module.exports = new OfferRepository();
+

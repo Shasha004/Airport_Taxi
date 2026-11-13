@@ -118,3 +118,4 @@ class ChangeRequestRepository {
 }
 
 module.exports = new ChangeRequestRepository();
+

@@ -13,6 +13,7 @@ import {
   AlertCircle,
   CheckCircle,
   Search,
+  Car,
 } from 'lucide-react';
 import { rideRequestApi } from '../../api/api';
 

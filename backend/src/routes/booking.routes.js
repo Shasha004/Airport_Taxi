@@ -6,3 +6,4 @@ router.post('/offers/:offerId', bookingController.bookOffer);
 router.get('/:bookingNumber', bookingController.getBooking);
 
 module.exports = router;
+
