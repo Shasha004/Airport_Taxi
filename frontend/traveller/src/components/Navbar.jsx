@@ -45,3 +45,4 @@ function Navbar({ activeView = 'dashboard', onNavigate }) {
 }
 
 export default Navbar;
+
