@@ -1,0 +1,136 @@
+/* ==========================================================================
+   CABOWNER DASHBOARD STYLES (BLACK & WHITE MINIMALIST)
+   ========================================================================== */
+
+.cabowner-page {
+  padding-top: 32px;
+}
+
+.supplier-info-card {
+  padding: 24px;
+  margin-bottom: 32px;
+}
+
+.supplier-info-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 18px;
+  padding-bottom: 14px;
+  border-bottom: 2px solid var(--line-soft);
+}
+
+.supplier-info-title {
+  font-size: 1.5rem;
+  margin-top: 6px;
+}
+
+.supplier-info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px 24px;
+}
+
+.supplier-info-grid > div {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.supplier-info-grid label {
+  font-size: 0.74rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--muted);
+  letter-spacing: 0.05em;
+}
+
+.supplier-info-grid span {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.queue-section {
+  margin-top: 10px;
+}
+
+.queue-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 16px;
+}
+
+.queue-title-row small {
+  color: var(--muted);
+}
+
+/* Dispatch Controls */
+.dispatch-controls {
+  margin-top: 20px;
+  padding-top: 18px;
+  border-top: 2px solid var(--line-soft);
+  display: grid;
+  gap: 14px;
+}
+
+.dispatch-busy-box {
+  padding: 10px 14px;
+  background: var(--paper);
+  border: 1.5px dashed var(--line);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.dispatch-busy-box label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.dispatch-busy-box span {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.dispatch-action-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 6px;
+}
+
+.dispatch-price-box {
+  display: flex;
+  flex-direction: column;
+}
+
+.dispatch-price-box label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.dispatch-price {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--black);
+}
+
+.dispatch-range {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+@media (max-width: 680px) {
+  .supplier-info-grid {
+    grid-template-columns: 1fr;
+  }
+  .dispatch-action-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
