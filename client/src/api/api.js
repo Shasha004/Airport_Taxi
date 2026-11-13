@@ -87,6 +87,10 @@ export const bookingApi = {
     const res = await api.get(`/bookings/${bookingNumber}`);
     return res.data;
   },
+  cancelBooking: async (bookingNumber) => {
+    const res = await api.post(`/bookings/${bookingNumber}/cancel`);
+    return res.data;
+  },
 };
 
 export const changeRequestApi = {

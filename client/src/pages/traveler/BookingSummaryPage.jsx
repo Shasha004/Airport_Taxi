@@ -13,6 +13,8 @@ import {
   Search,
   ArrowRight,
   Edit3,
+  XCircle,
+  X,
 } from 'lucide-react';
 import { bookingApi } from '../../api/api';
 
@@ -24,6 +26,11 @@ export default function BookingSummaryPage() {
   const [booking, setBooking] = useState(null);
   const [loading, setLoading] = useState(Boolean(routeBookingNumber));
   const [error, setError] = useState(null);
+
+  // Cancel state
+  const [confirmCancel, setConfirmCancel] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
+  const [cancelError, setCancelError] = useState(null);
 
   const fetchBooking = async (numberToFetch) => {
     if (!numberToFetch) return;
@@ -56,6 +63,23 @@ export default function BookingSummaryPage() {
     if (!searchNumber.trim()) return;
     navigate(`/traveler/booking/${searchNumber.trim()}`);
   };
+
+  const handleCancelBooking = async () => {
+    setCancelling(true);
+    setCancelError(null);
+    try {
+      const res = await bookingApi.cancelBooking(booking.bookingNumber);
+      setBooking(res.data);
+      setConfirmCancel(false);
+    } catch (err) {
+      setCancelError(err.response?.data?.error || err.message || 'Failed to cancel booking.');
+    } finally {
+      setCancelling(false);
+    }
+  };
+
+  const isCancelled = booking?.status === 'cancelled';
+  const isConfirmed = booking?.status === 'confirmed';
 
   return (
     <div className="booking-summary-container">
@@ -96,25 +120,78 @@ export default function BookingSummaryPage() {
         </div>
       )}
 
-      {/* Confirmed Booking Summary Display */}
+      {/* Booking Summary Display */}
       {booking && !loading && (
         <div className="booking-card">
           <div className="booking-card-top">
             <div className="booking-badge-group">
-              <span className="booking-confirmed-pill">
-                <CheckCircle size={16} />
-                <span>CONFIRMED BOOKING</span>
-              </span>
+              {isCancelled ? (
+                <span className="booking-cancelled-pill">
+                  <XCircle size={16} />
+                  <span>CANCELLED</span>
+                </span>
+              ) : (
+                <span className="booking-confirmed-pill">
+                  <CheckCircle size={16} />
+                  <span>CONFIRMED BOOKING</span>
+                </span>
+              )}
               <span className="booking-ref">#{booking.bookingNumber}</span>
             </div>
-            <Link
-              to={`/traveler/booking/${booking.bookingNumber}/change`}
-              className="btn-secondary"
-            >
-              <Edit3 size={16} />
-              <span>Request Flight / Pickup Change (R9)</span>
-            </Link>
+
+            {/* Action buttons – only shown for confirmed bookings */}
+            {isConfirmed && (
+              <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                <Link
+                  to={`/traveler/booking/${booking.bookingNumber}/change`}
+                  className="btn-secondary"
+                >
+                  <Edit3 size={16} />
+                  <span>Request Flight / Pickup Change (R9)</span>
+                </Link>
+                <button
+                  className="btn-danger"
+                  onClick={() => { setConfirmCancel(true); setCancelError(null); }}
+                >
+                  <XCircle size={16} />
+                  <span>Cancel Booking</span>
+                </button>
+              </div>
+            )}
           </div>
+
+          {/* Cancel confirmation inline */}
+          {confirmCancel && isConfirmed && (
+            <div className="cancel-confirm-box">
+              <AlertCircle size={20} className="text-danger" />
+              <div style={{ flex: 1 }}>
+                <strong>Are you sure you want to cancel this booking?</strong>
+                <p style={{ margin: '0.25rem 0 0', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
+                  This will reopen the ride request so other suppliers can re-offer. This action cannot be undone.
+                </p>
+                {cancelError && (
+                  <p style={{ color: 'var(--color-danger)', marginTop: '0.4rem', fontSize: '0.875rem' }}>{cancelError}</p>
+                )}
+                <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.75rem' }}>
+                  <button
+                    className="btn-danger"
+                    onClick={handleCancelBooking}
+                    disabled={cancelling}
+                  >
+                    {cancelling ? 'Cancelling...' : 'Yes, Cancel Booking'}
+                  </button>
+                  <button
+                    className="btn-secondary"
+                    onClick={() => { setConfirmCancel(false); setCancelError(null); }}
+                    disabled={cancelling}
+                  >
+                    <X size={14} />
+                    Keep Booking
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
           <div className="booking-hero-route">
             <div className="b-segment">
@@ -177,6 +254,7 @@ export default function BookingSummaryPage() {
           <div className="booking-footer-note">
             <p>
               Your booking reference <strong>#{booking.bookingNumber}</strong> is stored securely in SQLite and persists after application restarts.
+              {isCancelled && <span style={{ color: 'var(--color-danger)', marginLeft: '0.5rem' }}>This booking has been cancelled.</span>}
             </p>
           </div>
         </div>
@@ -184,4 +262,3 @@ export default function BookingSummaryPage() {
     </div>
   );
 }
-

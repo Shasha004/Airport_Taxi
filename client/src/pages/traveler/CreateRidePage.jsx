@@ -24,8 +24,9 @@ export default function CreateRidePage() {
   const [hotels, setHotels] = useState([]);
   const [loadingCatalog, setLoadingCatalog] = useState(true);
 
-  // Form state
-  const [travelerName, setTravelerName] = useState('Menon family');
+  // Form state - pre-fill traveler name from localStorage identity
+  const storedTravelerName = localStorage.getItem('airportTaxi_travelerName') || '';
+  const [travelerName, setTravelerName] = useState(storedTravelerName || 'Menon family');
   const [flightId, setFlightId] = useState('');
   const [hotelId, setHotelId] = useState('');
   const [adults, setAdults] = useState(2);
@@ -346,7 +347,12 @@ export default function CreateRidePage() {
                 placeholder="e.g. Menon family"
                 value={travelerName}
                 onChange={(e) => setTravelerName(e.target.value)}
+                readOnly={Boolean(storedTravelerName)}
+                style={storedTravelerName ? { backgroundColor: 'var(--bg-secondary)', cursor: 'default' } : {}}
               />
+              {storedTravelerName && (
+                <span className="help-text">Pre-filled from your traveler identity. Go back to switch user.</span>
+              )}
             </div>
           </div>
 

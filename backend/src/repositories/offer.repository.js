@@ -76,6 +76,15 @@ class OfferRepository {
     stmt.run(requestId, chosenOfferId);
   }
 
+  findAssignedByRequestAndSupplierAndCar(requestId, supplierId, carId) {
+    const db = getDatabase();
+    const stmt = db.prepare(
+      "SELECT * FROM offers WHERE request_id = ? AND supplier_id = ? AND car_id = ? AND status = 'assigned' LIMIT 1"
+    );
+    const row = stmt.get(requestId, supplierId, carId);
+    return formatOffer(row);
+  }
+
   countBySupplier(supplierId) {
     const db = getDatabase();
     const stmt = db.prepare('SELECT COUNT(*) as count FROM offers WHERE supplier_id = ?');

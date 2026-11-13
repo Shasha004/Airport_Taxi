@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   PlusCircle,
   RefreshCw,
@@ -14,15 +14,28 @@ import {
   CheckCircle,
   Search,
   Car,
+  User,
+  LogOut,
 } from 'lucide-react';
 import { rideRequestApi } from '../../api/api';
 
+const TRAVELER_KEY = 'airportTaxi_travelerName';
+
 export default function TravelerDashboard() {
+  const navigate = useNavigate();
+  const [travelerName, setTravelerName] = useState(() => localStorage.getItem(TRAVELER_KEY) || '');
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [filter, setFilter] = useState('all'); // 'all' or 'open'
   const [searchTerm, setSearchTerm] = useState('');
+
+  // If no identity, redirect to landing
+  useEffect(() => {
+    if (!travelerName) {
+      navigate('/', { replace: true });
+    }
+  }, [travelerName, navigate]);
 
   const fetchRequests = async () => {
     setLoading(true);
@@ -30,7 +43,12 @@ export default function TravelerDashboard() {
     try {
       const params = filter === 'open' ? { status: 'open' } : {};
       const res = await rideRequestApi.getRideRequests(params);
-      setRequests(res.data || []);
+      // Filter to only this traveler's requests
+      const all = res.data || [];
+      const mine = travelerName
+        ? all.filter(r => (r.travelerName || '').toLowerCase() === travelerName.toLowerCase())
+        : all;
+      setRequests(mine);
     } catch (err) {
       setError(err.response?.data?.error || err.message || 'Failed to load ride requests');
     } finally {
@@ -39,8 +57,13 @@ export default function TravelerDashboard() {
   };
 
   useEffect(() => {
-    fetchRequests();
-  }, [filter]);
+    if (travelerName) fetchRequests();
+  }, [filter, travelerName]);
+
+  const handleSwitchUser = () => {
+    localStorage.removeItem(TRAVELER_KEY);
+    navigate('/', { replace: true });
+  };
 
   const formatDate = (dateStr) => {
     if (!dateStr) return 'N/A';
@@ -81,6 +104,16 @@ export default function TravelerDashboard() {
           <p className="dashboard-subtitle">
             Manage your airport ride requests and track status in real-time
           </p>
+          {travelerName && (
+            <div className="traveler-identity-bar">
+              <User size={14} />
+              <span>Viewing as: <strong>{travelerName}</strong></span>
+              <button className="switch-user-btn" onClick={handleSwitchUser} title="Switch traveler">
+                <LogOut size={13} />
+                <span>Switch</span>
+              </button>
+            </div>
+          )}
         </div>
         <div className="dashboard-actions">
           <button
@@ -106,7 +139,7 @@ export default function TravelerDashboard() {
             className={`tab-btn ${filter === 'all' ? 'active' : ''}`}
             onClick={() => setFilter('all')}
           >
-            All Requests ({requests.length})
+            My Requests ({requests.length})
           </button>
           <button
             className={`tab-btn ${filter === 'open' ? 'active' : ''}`}
@@ -156,7 +189,7 @@ export default function TravelerDashboard() {
         <div className="empty-state">
           <Plane size={48} className="empty-icon" />
           <h3>No Ride Requests Found</h3>
-          <p>You haven't posted any airport taxi requests yet.</p>
+          <p>You haven't posted any airport taxi requests yet. Use 'Create New Ride' to get started.</p>
           <Link to="/traveler/create" className="btn-primary" style={{ marginTop: '1rem' }}>
             <PlusCircle size={18} />
             <span>Post Your First Ride</span>

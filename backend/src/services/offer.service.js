@@ -15,6 +15,12 @@ class OfferService {
     // Run complete R4, R5, R6, R7 validations
     const validated = offerValidator.validateOffer(request, supplierId, carId, price);
 
+    // Idempotency check: if this supplier already has an assigned offer for this request+car, return existing
+    const existingOffer = offerRepo.findAssignedByRequestAndSupplierAndCar(requestId, supplierId, carId);
+    if (existingOffer) {
+      return this.enrichOffer(existingOffer);
+    }
+
     const randomSuffix = Math.floor(1000 + Math.random() * 9000);
     const offerId = `OFFER-${Date.now().toString().slice(-4)}${randomSuffix}`;
 

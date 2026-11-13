@@ -115,6 +115,20 @@ class BookingRepository {
     stmt.run(flightId, pickupAt, bookingId);
     return this.findById(bookingId);
   }
+
+  cancelBookingTransaction(bookingId, offerId, requestId) {
+    const db = getDatabase();
+    const transaction = db.transaction(() => {
+      // 1. Mark booking as cancelled
+      db.prepare("UPDATE bookings SET status = 'cancelled' WHERE id = ?").run(bookingId);
+      // 2. Restore offer to 'assigned' so the request can be re-offered
+      db.prepare("UPDATE offers SET status = 'assigned' WHERE id = ?").run(offerId);
+      // 3. Re-open the ride request
+      db.prepare("UPDATE ride_requests SET status = 'open' WHERE id = ?").run(requestId);
+    });
+    transaction();
+    return this.findById(bookingId);
+  }
 }
 
 module.exports = new BookingRepository();

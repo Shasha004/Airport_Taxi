@@ -40,6 +40,23 @@ class BookingController {
       next(err);
     }
   }
+
+  cancelBooking(req, res, next) {
+    try {
+      const { bookingNumber } = req.params;
+      const booking = bookingService.cancelBooking(bookingNumber);
+      res.json({
+        success: true,
+        message: 'Booking cancelled successfully. The ride request is now open again.',
+        data: booking,
+      });
+    } catch (err) {
+      res.status(err.statusCode || 400).json({
+        success: false,
+        error: err.message,
+      });
+    }
+  }
 }
 
 module.exports = new BookingController();

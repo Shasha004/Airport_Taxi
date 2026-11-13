@@ -112,6 +112,22 @@ class BookingService {
     return this.enrichBooking(booking);
   }
 
+  cancelBooking(bookingNumber) {
+    const booking = bookingRepo.findByBookingNumber(bookingNumber);
+    if (!booking) {
+      const err = new Error(`Booking "${bookingNumber}" not found.`);
+      err.statusCode = 404;
+      throw err;
+    }
+    if (booking.status !== 'confirmed') {
+      const err = new Error(`Cannot cancel booking with status "${booking.status}". Only confirmed bookings can be cancelled.`);
+      err.statusCode = 400;
+      throw err;
+    }
+    const updated = bookingRepo.cancelBookingTransaction(booking.id, booking.offerId, booking.requestId);
+    return this.enrichBooking(updated);
+  }
+
   enrichBooking(booking) {
     if (!booking) return null;
     const flight = catalogService.getFlightById(booking.flightId);

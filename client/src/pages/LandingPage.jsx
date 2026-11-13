@@ -1,13 +1,112 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { UserCheck, Building2, ShieldCheck, Clock, MapPin, Sparkles } from 'lucide-react';
+import { UserCheck, Building2, ShieldCheck, Clock, MapPin, Sparkles, ArrowRight, X, User } from 'lucide-react';
 import RoleCard from '../components/RoleCard';
+
+const TRAVELER_KEY = 'airportTaxi_travelerName';
 
 export default function LandingPage() {
   const navigate = useNavigate();
+  const [showModal, setShowModal] = useState(false);
+  const [nameInput, setNameInput] = useState('');
+  const [nameError, setNameError] = useState('');
+
+  const savedName = localStorage.getItem(TRAVELER_KEY);
+
+  const handleEnterTraveler = () => {
+    setNameInput(savedName || '');
+    setNameError('');
+    setShowModal(true);
+  };
+
+  const handleModalSubmit = (e) => {
+    e.preventDefault();
+    const trimmed = nameInput.trim();
+    if (!trimmed) {
+      setNameError('Please enter your name or group name to continue.');
+      return;
+    }
+    localStorage.setItem(TRAVELER_KEY, trimmed);
+    setShowModal(false);
+    navigate('/traveler');
+  };
+
+  const handleSwitchUser = () => {
+    localStorage.removeItem(TRAVELER_KEY);
+    setNameInput('');
+    setNameError('');
+  };
 
   return (
     <div className="landing-page">
+      {/* Traveler Identity Modal */}
+      {showModal && (
+        <div className="modal-overlay" onClick={() => setShowModal(false)}>
+          <div className="modal-card" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <div className="modal-title-row">
+                <User size={22} className="text-primary" />
+                <h3>Enter as Traveler</h3>
+              </div>
+              <button className="modal-close-btn" onClick={() => setShowModal(false)} title="Close">
+                <X size={18} />
+              </button>
+            </div>
+
+            {savedName ? (
+              <div className="modal-body">
+                <p className="modal-desc">Welcome back!</p>
+                <div className="saved-name-pill">
+                  <User size={16} />
+                  <span>{savedName}</span>
+                </div>
+                <div className="modal-actions" style={{ marginTop: '1rem' }}>
+                  <button
+                    className="btn-primary"
+                    onClick={() => { setShowModal(false); navigate('/traveler'); }}
+                  >
+                    <span>Continue as {savedName}</span>
+                    <ArrowRight size={16} />
+                  </button>
+                  <button className="btn-secondary" onClick={handleSwitchUser}>
+                    Switch User
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <form className="modal-body" onSubmit={handleModalSubmit}>
+                <p className="modal-desc">
+                  Enter your name or group name. Your requests will be linked to this identity.
+                </p>
+                <div className="form-group" style={{ marginBottom: '0.5rem' }}>
+                  <label htmlFor="travelerNameInput">Your Name / Group Name</label>
+                  <input
+                    id="travelerNameInput"
+                    type="text"
+                    className={`input-field${nameError ? ' input-error' : ''}`}
+                    placeholder="e.g. Menon family, John Smith"
+                    value={nameInput}
+                    onChange={(e) => { setNameInput(e.target.value); setNameError(''); }}
+                    autoFocus
+                    maxLength={80}
+                  />
+                  {nameError && <span className="field-error">{nameError}</span>}
+                </div>
+                <div className="modal-actions" style={{ marginTop: '1rem' }}>
+                  <button type="submit" className="btn-primary">
+                    <span>Continue as Traveler</span>
+                    <ArrowRight size={16} />
+                  </button>
+                  <button type="button" className="btn-secondary" onClick={() => setShowModal(false)}>
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
+
       <section className="hero-section">
         <div className="hero-badge">
           <Sparkles size={16} />
@@ -37,7 +136,7 @@ export default function LandingPage() {
             'Dynamic route pricing boundary checks (R3)',
             'Luggage and passenger capacity validation (R1)',
           ]}
-          onClick={() => navigate('/traveler')}
+          onClick={handleEnterTraveler}
         />
 
         <RoleCard
@@ -86,4 +185,3 @@ export default function LandingPage() {
     </div>
   );
 }
-
