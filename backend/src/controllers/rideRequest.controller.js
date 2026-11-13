@@ -39,13 +39,8 @@ class RideRequestController {
 
   getRideRequests(req, res, next) {
     try {
-      const { status } = req.query;
-      let requests;
-      if (status === 'open') {
-        requests = rideRequestService.listOpenRideRequests();
-      } else {
-        requests = rideRequestService.listAllRideRequests();
-      }
+      const { status, travelerName } = req.query;
+      const requests = rideRequestService.listRideRequests({ status, travelerName });
       res.json({
         success: true,
         count: requests.length,

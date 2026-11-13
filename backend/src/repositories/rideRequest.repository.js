@@ -92,18 +92,28 @@ class RideRequestRepository {
     return formatRequest(row);
   }
 
-  findAll() {
+  findAll(filters = {}) {
     const db = getDatabase();
-    const stmt = db.prepare('SELECT * FROM ride_requests ORDER BY created_at DESC');
-    const rows = stmt.all();
+    let query = 'SELECT * FROM ride_requests WHERE 1=1';
+    const params = [];
+
+    if (filters.status) {
+      query += ' AND status = ?';
+      params.push(filters.status);
+    }
+    if (filters.travelerName) {
+      query += ' AND LOWER(traveler_name) LIKE ?';
+      params.push(`%${filters.travelerName.toLowerCase()}%`);
+    }
+
+    query += ' ORDER BY created_at DESC';
+    const stmt = db.prepare(query);
+    const rows = stmt.all(...params);
     return rows.map(formatRequest);
   }
 
   findOpenRequests() {
-    const db = getDatabase();
-    const stmt = db.prepare("SELECT * FROM ride_requests WHERE status = 'open' ORDER BY created_at DESC");
-    const rows = stmt.all();
-    return rows.map(formatRequest);
+    return this.findAll({ status: 'open' });
   }
 }
 

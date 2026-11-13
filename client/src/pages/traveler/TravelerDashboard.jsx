@@ -12,6 +12,7 @@ import {
   Navigation,
   AlertCircle,
   CheckCircle,
+  Search,
 } from 'lucide-react';
 import { rideRequestApi } from '../../api/api';
 
@@ -20,6 +21,7 @@ export default function TravelerDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [filter, setFilter] = useState('all'); // 'all' or 'open'
+  const [searchTerm, setSearchTerm] = useState('');
 
   const fetchRequests = async () => {
     setLoading(true);
@@ -57,6 +59,18 @@ export default function TravelerDashboard() {
     }
   };
 
+  const filteredRequests = requests.filter((req) => {
+    if (!searchTerm.trim()) return true;
+    const term = searchTerm.toLowerCase();
+    const nameMatch = (req.travelerName || '').toLowerCase().includes(term);
+    const idMatch = (req.id || '').toLowerCase().includes(term);
+    const flightMatch = (req.flightId || '').toLowerCase().includes(term) ||
+      (req.flight?.flight_number || '').toLowerCase().includes(term);
+    const hotelMatch = (req.hotelId || '').toLowerCase().includes(term) ||
+      (req.hotel?.name || '').toLowerCase().includes(term);
+    return nameMatch || idMatch || flightMatch || hotelMatch;
+  });
+
   return (
     <div className="dashboard-container">
       {/* Header bar */}
@@ -84,20 +98,42 @@ export default function TravelerDashboard() {
         </div>
       </div>
 
-      {/* Filter Tabs */}
-      <div className="filter-tabs">
-        <button
-          className={`tab-btn ${filter === 'all' ? 'active' : ''}`}
-          onClick={() => setFilter('all')}
-        >
-          All Requests ({requests.length})
-        </button>
-        <button
-          className={`tab-btn ${filter === 'open' ? 'active' : ''}`}
-          onClick={() => setFilter('open')}
-        >
-          Open Requests
-        </button>
+      {/* Filter Tabs & Search */}
+      <div className="filter-and-search-bar">
+        <div className="filter-tabs">
+          <button
+            className={`tab-btn ${filter === 'all' ? 'active' : ''}`}
+            onClick={() => setFilter('all')}
+          >
+            All Requests ({requests.length})
+          </button>
+          <button
+            className={`tab-btn ${filter === 'open' ? 'active' : ''}`}
+            onClick={() => setFilter('open')}
+          >
+            Open Requests
+          </button>
+        </div>
+
+        <div className="search-box">
+          <Search size={16} className="search-icon" />
+          <input
+            type="text"
+            className="search-input"
+            placeholder="Search traveler, request ID, hotel..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+          {searchTerm && (
+            <button
+              className="clear-search-btn"
+              onClick={() => setSearchTerm('')}
+              title="Clear search"
+            >
+              ×
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Error state */}
@@ -125,10 +161,19 @@ export default function TravelerDashboard() {
             <span>Post Your First Ride</span>
           </Link>
         </div>
+      ) : filteredRequests.length === 0 ? (
+        <div className="empty-state">
+          <Search size={36} className="empty-icon" />
+          <h3>No Matching Requests</h3>
+          <p>No ride requests match "{searchTerm}".</p>
+          <button className="btn-secondary" onClick={() => setSearchTerm('')} style={{ marginTop: '0.75rem' }}>
+            Clear Search
+          </button>
+        </div>
       ) : (
         /* Requests Grid */
         <div className="requests-grid">
-          {requests.map((req) => {
+          {filteredRequests.map((req) => {
             const childCount = Array.isArray(req.childAges) ? req.childAges.length : 0;
             const totalPassengers = (req.adults || 0) + childCount;
 
@@ -253,4 +298,3 @@ export default function TravelerDashboard() {
     </div>
   );
 }
-

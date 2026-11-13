@@ -59,12 +59,15 @@ class RideRequestService {
   }
 
   listOpenRideRequests() {
-    const requests = rideRequestRepo.findOpenRequests();
-    return requests.map(req => this.enrichRequest(req));
+    return this.listRideRequests({ status: 'open' });
   }
 
   listAllRideRequests() {
-    const requests = rideRequestRepo.findAll();
+    return this.listRideRequests();
+  }
+
+  listRideRequests(filters = {}) {
+    const requests = rideRequestRepo.findAll(filters);
     return requests.map(req => this.enrichRequest(req));
   }
 
