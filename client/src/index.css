@@ -2102,3 +2102,129 @@ a {
   gap: 0.75rem;
 }
 
+/* Vehicle Capacity Card (R5) */
+.vehicle-capacity-card {
+  margin-top: 1rem;
+  border-radius: var(--radius-md);
+  padding: 1.25rem;
+  border: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  transition: all 0.2s ease;
+}
+
+.vehicle-capacity-card.cap-pass {
+  background: #f0fdf4;
+  border-color: #86efac;
+}
+
+.vehicle-capacity-card.cap-fail {
+  background: #fef2f2;
+  border-color: #fca5a5;
+}
+
+.cap-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.cap-card-header strong {
+  display: block;
+  font-size: 0.95rem;
+  color: #1e293b;
+}
+
+.cap-sub {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.cap-status-pill {
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.2rem 0.6rem;
+  border-radius: 9999px;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+
+.pill-pass {
+  background: #22c55e;
+  color: #ffffff;
+}
+
+.pill-fail {
+  background: #ef4444;
+  color: #ffffff;
+}
+
+.cap-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0.75rem;
+}
+
+.cap-metric-item {
+  background: #ffffff;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 0.65rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  font-size: 0.8rem;
+}
+
+.metric-lbl {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.metric-vals {
+  display: flex;
+  flex-direction: column;
+}
+
+.metric-vals strong {
+  font-size: 0.85rem;
+  color: #0f172a;
+}
+
+.metric-vals span {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.metric-tag {
+  margin-top: 0.25rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.metric-ok .metric-tag {
+  color: #15803d;
+}
+
+.metric-bad .metric-tag {
+  color: #b91c1c;
+}
+
+.cap-warning-box {
+  background: #ffffff;
+  border: 1px solid #fca5a5;
+  border-radius: var(--radius-sm);
+  padding: 0.6rem 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #991b1b;
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+
+

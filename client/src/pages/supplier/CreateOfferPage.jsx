@@ -60,12 +60,51 @@ export default function CreateOfferPage() {
 
   const activeSupplier = suppliers.find(s => s.company_id === supplierId);
 
-  // Set default car when supplier loads or changes
+  // Compute R5 requirements for the current request
+  const totalPassengers = request ? (Number(request.adults || 0) + (Array.isArray(request.childAges) ? request.childAges.length : 0)) : 0;
+  const reqLargeBags = request ? Number(request.largeBags || 0) : 0;
+  const reqSmallBags = request ? Number(request.smallBags || 0) : 0;
+  const reqCarType = request?.carType ? request.carType.toUpperCase() : null;
+
+  // Helper function to check vehicle capacity compliance with R5
+  const checkVehicleCapacity = (car) => {
+    if (!car || !request) return { eligible: true, seatOk: true, largeOk: true, smallOk: true, typeOk: true, reasons: [] };
+    const seatOk = Number(car.seats || 0) >= totalPassengers;
+    const largeOk = Number(car.large_bags || 0) >= reqLargeBags;
+    const smallOk = Number(car.small_bags || 0) >= reqSmallBags;
+    const typeOk = !reqCarType || (car.type && car.type.toUpperCase() === reqCarType);
+
+    const reasons = [];
+    if (!seatOk) reasons.push(`Seats: ${car.seats} < ${totalPassengers} needed`);
+    if (!largeOk) reasons.push(`Large luggage: ${car.large_bags} < ${reqLargeBags} needed`);
+    if (!smallOk) reasons.push(`Small luggage: ${car.small_bags} < ${reqSmallBags} needed`);
+    if (!typeOk) reasons.push(`Type: ${car.type} does not match preferred ${reqCarType}`);
+
+    return {
+      eligible: seatOk && largeOk && smallOk && typeOk,
+      seatOk,
+      largeOk,
+      smallOk,
+      typeOk,
+      reasons
+    };
+  };
+
+  // Automatically select the first eligible vehicle whenever supplier or request changes
   useEffect(() => {
-    if (activeSupplier && activeSupplier.vehicles?.length > 0) {
-      setCarId(activeSupplier.vehicles[0].vehicle_id);
+    if (activeSupplier && activeSupplier.vehicles?.length > 0 && request) {
+      const eligibleCar = activeSupplier.vehicles.find(car => checkVehicleCapacity(car).eligible);
+      if (eligibleCar) {
+        setCarId(eligibleCar.vehicle_id);
+      } else {
+        setCarId(activeSupplier.vehicles[0].vehicle_id);
+      }
     }
-  }, [supplierId, activeSupplier]);
+  }, [supplierId, activeSupplier, request]);
+
+  const selectedCar = activeSupplier?.vehicles?.find(c => c.vehicle_id === carId);
+  const selectedCarCap = checkVehicleCapacity(selectedCar);
+  const eligibleCars = activeSupplier?.vehicles?.filter(c => checkVehicleCapacity(c).eligible) || [];
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -74,6 +113,11 @@ export default function CreateOfferPage() {
 
     if (!carId) {
       setError('Please select a car from your fleet.');
+      return;
+    }
+
+    if (!selectedCarCap.eligible) {
+      setError(`R5 Capacity Violation: ${selectedCarCap.reasons.join('; ')}. Please select a vehicle with adequate capacity.`);
       return;
     }
 
@@ -238,7 +282,7 @@ export default function CreateOfferPage() {
           </div>
 
           <div className="form-group" style={{ marginTop: '1rem' }}>
-            <label htmlFor="carSelect">Vehicle Assignment *</label>
+            <label htmlFor="carSelect">Vehicle Assignment (Rule R5) *</label>
             <select
               id="carSelect"
               className="input-field"
@@ -246,13 +290,92 @@ export default function CreateOfferPage() {
               onChange={(e) => setCarId(e.target.value)}
               required
             >
-              {activeSupplier?.vehicles?.map((car) => (
-                <option key={car.vehicle_id} value={car.vehicle_id}>
-                  {car.vehicle_id} — {car.type} ({car.seats} seats | {car.large_bags} large bags, {car.small_bags} small bags)
-                </option>
-              ))}
+              {activeSupplier?.vehicles?.map((car) => {
+                const cap = checkVehicleCapacity(car);
+                return (
+                  <option
+                    key={car.vehicle_id}
+                    value={car.vehicle_id}
+                    disabled={!cap.eligible}
+                    style={{ color: cap.eligible ? '#15803d' : '#94a3b8' }}
+                  >
+                    {cap.eligible ? '✓ ' : '⚠️ '}
+                    {car.vehicle_id} — {car.type} ({car.seats} seats | {car.large_bags} large, {car.small_bags} small bags)
+                    {cap.eligible ? ' — MEETS CAPACITY (R5)' : ` — INSUFFICIENT (${cap.reasons.join(', ')})`}
+                  </option>
+                );
+              })}
             </select>
           </div>
+
+          {/* Real-time R5 Vehicle Capacity Breakdown */}
+          {selectedCar && (
+            <div className={`vehicle-capacity-card ${selectedCarCap.eligible ? 'cap-pass' : 'cap-fail'}`}>
+              <div className="cap-card-header">
+                <div>
+                  <strong>{selectedCar.vehicle_id} ({selectedCar.type}) Capacity Check</strong>
+                  <span className="cap-sub">Verifying passenger seats & luggage against request requirements</span>
+                </div>
+                <span className={`cap-status-pill ${selectedCarCap.eligible ? 'pill-pass' : 'pill-fail'}`}>
+                  {selectedCarCap.eligible ? 'R5 COMPLIANT' : 'CAPACITY SHORTFALL'}
+                </span>
+              </div>
+
+              <div className="cap-metrics-grid">
+                <div className={`cap-metric-item ${selectedCarCap.seatOk ? 'metric-ok' : 'metric-bad'}`}>
+                  <span className="metric-lbl">Passenger Seats</span>
+                  <div className="metric-vals">
+                    <strong>{selectedCar.seats} seats</strong>
+                    <span>Needs {totalPassengers}</span>
+                  </div>
+                  <span className="metric-tag">{selectedCarCap.seatOk ? '✓ Adequate' : '✗ Insufficient'}</span>
+                </div>
+
+                <div className={`cap-metric-item ${selectedCarCap.largeOk ? 'metric-ok' : 'metric-bad'}`}>
+                  <span className="metric-lbl">Large Luggage</span>
+                  <div className="metric-vals">
+                    <strong>{selectedCar.large_bags} large</strong>
+                    <span>Needs {reqLargeBags}</span>
+                  </div>
+                  <span className="metric-tag">{selectedCarCap.largeOk ? '✓ Fits large bags' : `✗ Short by ${reqLargeBags - selectedCar.large_bags}`}</span>
+                </div>
+
+                <div className={`cap-metric-item ${selectedCarCap.smallOk ? 'metric-ok' : 'metric-bad'}`}>
+                  <span className="metric-lbl">Small Luggage</span>
+                  <div className="metric-vals">
+                    <strong>{selectedCar.small_bags} small</strong>
+                    <span>Needs {reqSmallBags}</span>
+                  </div>
+                  <span className="metric-tag">{selectedCarCap.smallOk ? '✓ Fits small bags' : `✗ Short by ${reqSmallBags - selectedCar.small_bags}`}</span>
+                </div>
+
+                {reqCarType && (
+                  <div className={`cap-metric-item ${selectedCarCap.typeOk ? 'metric-ok' : 'metric-bad'}`}>
+                    <span className="metric-lbl">Car Category</span>
+                    <div className="metric-vals">
+                      <strong>{selectedCar.type}</strong>
+                      <span>Prefers {reqCarType}</span>
+                    </div>
+                    <span className="metric-tag">{selectedCarCap.typeOk ? '✓ Match' : '✗ Mismatch'}</span>
+                  </div>
+                )}
+              </div>
+
+              {!selectedCarCap.eligible && (
+                <div className="cap-warning-box">
+                  <AlertCircle size={16} />
+                  <span>
+                    Cannot submit with {selectedCar.vehicle_id} due to Rule R5.
+                    {eligibleCars.length > 0 ? (
+                      <> Recommended alternative: <strong>{eligibleCars.map(c => `${c.vehicle_id} (${c.type})`).join(', ')}</strong></>
+                    ) : (
+                      <> None of this supplier's fleet meets capacity. Switch to another supplier company above.</>
+                    )}
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         <div className="form-section">
@@ -289,7 +412,12 @@ export default function CreateOfferPage() {
           >
             Cancel
           </button>
-          <button type="submit" className="btn-primary" disabled={submitting}>
+          <button
+            type="submit"
+            className="btn-primary"
+            disabled={submitting || !selectedCarCap.eligible}
+            title={!selectedCarCap.eligible ? 'Selected vehicle does not meet capacity requirements (R5)' : 'Submit Offer'}
+          >
             {submitting ? (
               <>
                 <RefreshCw size={16} className="spin" />
