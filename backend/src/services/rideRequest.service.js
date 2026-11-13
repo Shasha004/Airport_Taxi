@@ -33,6 +33,7 @@ class RideRequestService {
 
     const newRecord = {
       id: payload.id || payload.requestId || generatedId,
+      travelerId: payload.travelerId || payload.traveler_id,
       travelerName,
       flightId,
       hotelId,
@@ -69,6 +70,10 @@ class RideRequestService {
   listRideRequests(filters = {}) {
     const requests = rideRequestRepo.findAll(filters);
     return requests.map(req => this.enrichRequest(req));
+  }
+
+  getTravelers() {
+    return rideRequestRepo.getDistinctTravelers();
   }
 
   enrichRequest(request) {

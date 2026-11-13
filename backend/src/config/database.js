@@ -29,6 +29,7 @@ function initializeDatabase(dbPath) {
   database.exec(`
     CREATE TABLE IF NOT EXISTS ride_requests (
       id TEXT PRIMARY KEY,
+      traveler_id TEXT,
       traveler_name TEXT,
       flight_id TEXT NOT NULL,
       hotel_id TEXT NOT NULL,
@@ -43,6 +44,29 @@ function initializeDatabase(dbPath) {
       created_at TEXT DEFAULT CURRENT_TIMESTAMP
     );
   `);
+
+  // Migration: ensure traveler_id column exists
+  try {
+    database.exec(`ALTER TABLE ride_requests ADD COLUMN traveler_id TEXT;`);
+  } catch (e) {
+    // Column already exists, safe to ignore
+  }
+
+  // Backfill traveler_id for known records
+  try {
+    database.exec(`
+      UPDATE ride_requests SET traveler_id = 'TRV-001' WHERE (traveler_id IS NULL OR traveler_id = '') AND traveler_name = 'Kavya Rao';
+      UPDATE ride_requests SET traveler_id = 'TRV-002' WHERE (traveler_id IS NULL OR traveler_id = '') AND traveler_name = 'Arjun and Meera';
+      UPDATE ride_requests SET traveler_id = 'TRV-003' WHERE (traveler_id IS NULL OR traveler_id = '') AND traveler_name = 'Iyer family';
+      UPDATE ride_requests SET traveler_id = 'TRV-004' WHERE (traveler_id IS NULL OR traveler_id = '') AND traveler_name = 'Menon family';
+      UPDATE ride_requests SET traveler_id = 'TRV-005' WHERE (traveler_id IS NULL OR traveler_id = '') AND traveler_name = 'Menon family P2';
+      UPDATE ride_requests SET traveler_id = 'TRV-006' WHERE (traveler_id IS NULL OR traveler_id = '') AND id = 'REQ-70625337';
+      UPDATE ride_requests SET traveler_id = 'TRV-007' WHERE (traveler_id IS NULL OR traveler_id = '') AND id = 'REQ-81268979';
+      UPDATE ride_requests SET traveler_id = 'TRV-' || SUBSTR(REPLACE(id, 'REQ-', ''), -4) WHERE traveler_id IS NULL OR traveler_id = '';
+    `);
+  } catch (e) {
+    // ignore
+  }
 
   // Table 2: offers (Part 2)
   database.exec(`
@@ -99,15 +123,17 @@ function initializeDatabase(dbPath) {
     if (Array.isArray(openRequests) && openRequests.length > 0) {
       const insertStmt = database.prepare(`
         INSERT OR IGNORE INTO ride_requests (
-          id, traveler_name, flight_id, hotel_id, adults, child_ages_json,
+          id, traveler_id, traveler_name, flight_id, hotel_id, adults, child_ages_json,
           large_bags, small_bags, pickup_at, car_type, traveler_price, status
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `);
 
       const insertMany = database.transaction((requests) => {
         for (const req of requests) {
+          const travelerId = req.traveler_id || `TRV-${(req.request_id || '').replace(/\D/g, '').slice(-3) || '001'}`;
           insertStmt.run(
             req.request_id,
+            travelerId,
             req.traveler_name || 'Traveler',
             req.flight_id,
             req.hotel_id,

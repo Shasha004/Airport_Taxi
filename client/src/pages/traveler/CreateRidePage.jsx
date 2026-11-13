@@ -24,9 +24,11 @@ export default function CreateRidePage() {
   const [hotels, setHotels] = useState([]);
   const [loadingCatalog, setLoadingCatalog] = useState(true);
 
-  // Form state - pre-fill traveler name from localStorage identity
+  // Form state - pre-fill traveler identity from localStorage
   const storedTravelerName = localStorage.getItem('airportTaxi_travelerName') || '';
+  const storedTravelerId = localStorage.getItem('airportTaxi_travelerId') || '';
   const [travelerName, setTravelerName] = useState(storedTravelerName || '');
+  const [travelerId, setTravelerId] = useState(storedTravelerId || '');
   const [flightId, setFlightId] = useState('');
   const [hotelId, setHotelId] = useState('');
   const [adults, setAdults] = useState(2);
@@ -216,6 +218,7 @@ export default function CreateRidePage() {
     setSubmitting(true);
     try {
       const payload = {
+        travelerId: travelerId.trim() || undefined,
         travelerName: travelerName.trim() || 'Traveler',
         flightId,
         hotelId,
@@ -337,8 +340,25 @@ export default function CreateRidePage() {
             Select your arrival flight and destination hotel. The airport must serve the hotel's city.
           </p>
 
-          <div className="form-row">
-            <div className="form-group flex-1">
+          <div className="form-grid-2">
+            <div className="form-group">
+              <label htmlFor="travelerId">Traveler ID</label>
+              <input
+                id="travelerId"
+                type="text"
+                className="input-field"
+                placeholder="e.g. TRV-001"
+                value={travelerId}
+                onChange={(e) => setTravelerId(e.target.value)}
+                readOnly={Boolean(storedTravelerId)}
+                style={storedTravelerId ? { backgroundColor: 'var(--bg-secondary)', cursor: 'default' } : {}}
+              />
+              {storedTravelerId && (
+                <span className="help-text">Pre-filled from your traveler ID.</span>
+              )}
+            </div>
+
+            <div className="form-group">
               <label htmlFor="travelerName">Traveler / Group Name</label>
               <input
                 id="travelerName"
@@ -351,7 +371,7 @@ export default function CreateRidePage() {
                 style={storedTravelerName ? { backgroundColor: 'var(--bg-secondary)', cursor: 'default' } : {}}
               />
               {storedTravelerName && (
-                <span className="help-text">Pre-filled from your traveler identity. Go back to switch user.</span>
+                <span className="help-text">Pre-filled from your traveler name. Go back to switch user.</span>
               )}
             </div>
           </div>

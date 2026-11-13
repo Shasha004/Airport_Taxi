@@ -39,12 +39,25 @@ class RideRequestController {
 
   getRideRequests(req, res, next) {
     try {
-      const { status, travelerName } = req.query;
-      const requests = rideRequestService.listRideRequests({ status, travelerName });
+      const { status, travelerName, travelerId } = req.query;
+      const requests = rideRequestService.listRideRequests({ status, travelerName, travelerId });
       res.json({
         success: true,
         count: requests.length,
         data: requests
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  getTravelers(req, res, next) {
+    try {
+      const travelers = rideRequestService.getTravelers();
+      res.json({
+        success: true,
+        count: travelers.length,
+        data: travelers
       });
     } catch (err) {
       next(err);

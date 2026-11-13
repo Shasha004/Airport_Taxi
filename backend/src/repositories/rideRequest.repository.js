@@ -9,9 +9,12 @@ function formatRequest(row) {
     childAges = [];
   }
 
+  const travelerId = row.traveler_id || `TRV-${(row.id || '').replace(/\D/g, '').slice(-3) || '001'}`;
+
   return {
     id: row.id,
     requestId: row.id,
+    travelerId: travelerId,
     travelerName: row.traveler_name || 'Traveler',
     flightId: row.flight_id,
     hotelId: row.hotel_id,
@@ -27,6 +30,8 @@ function formatRequest(row) {
     status: row.status,
     createdAt: row.created_at,
     // Database snake_case mirrors for compatibility
+    traveler_id: travelerId,
+    traveler_name: row.traveler_name || 'Traveler',
     flight_id: row.flight_id,
     hotel_id: row.hotel_id,
     child_ages: childAges,
@@ -44,6 +49,7 @@ class RideRequestRepository {
   create(request) {
     const db = getDatabase();
     const id = request.id || request.requestId;
+    const travelerId = request.travelerId || request.traveler_id || `TRV-${Math.floor(100 + Math.random() * 900)}`;
     const travelerName = request.travelerName || request.traveler_name || 'Traveler';
     const flightId = request.flightId || request.flight_id;
     const hotelId = request.hotelId || request.hotel_id;
@@ -62,13 +68,14 @@ class RideRequestRepository {
 
     const stmt = db.prepare(`
       INSERT INTO ride_requests (
-        id, traveler_name, flight_id, hotel_id, adults, child_ages_json,
+        id, traveler_id, traveler_name, flight_id, hotel_id, adults, child_ages_json,
         large_bags, small_bags, pickup_at, car_type, traveler_price, status
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
     stmt.run(
       id,
+      travelerId,
       travelerName,
       flightId,
       hotelId,
@@ -101,9 +108,13 @@ class RideRequestRepository {
       query += ' AND status = ?';
       params.push(filters.status);
     }
+    if (filters.travelerId) {
+      query += ' AND LOWER(traveler_id) = ?';
+      params.push(filters.travelerId.trim().toLowerCase());
+    }
     if (filters.travelerName) {
       query += ' AND LOWER(traveler_name) LIKE ?';
-      params.push(`%${filters.travelerName.toLowerCase()}%`);
+      params.push(`%${filters.travelerName.trim().toLowerCase()}%`);
     }
 
     query += ' ORDER BY created_at DESC';
@@ -114,6 +125,21 @@ class RideRequestRepository {
 
   findOpenRequests() {
     return this.findAll({ status: 'open' });
+  }
+
+  getDistinctTravelers() {
+    const db = getDatabase();
+    const rows = db.prepare(`
+      SELECT
+        COALESCE(traveler_id, 'TRV-' || SUBSTR(id, -4)) as travelerId,
+        traveler_name as travelerName,
+        COUNT(id) as count
+      FROM ride_requests
+      WHERE traveler_name IS NOT NULL
+      GROUP BY travelerId, travelerName
+      ORDER BY travelerId ASC
+    `).all();
+    return rows;
   }
 }
 

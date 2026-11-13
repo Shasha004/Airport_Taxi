@@ -54,6 +54,10 @@ export const rideRequestApi = {
     const res = await api.get('/ride-requests', { params });
     return res.data;
   },
+  getTravelers: async () => {
+    const res = await api.get('/ride-requests/meta/travelers');
+    return res.data;
+  },
 };
 
 export const supplierApi = {

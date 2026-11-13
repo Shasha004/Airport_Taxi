@@ -16,14 +16,17 @@ import {
   Car,
   User,
   LogOut,
+  Hash,
 } from 'lucide-react';
 import { rideRequestApi } from '../../api/api';
 
-const TRAVELER_KEY = 'airportTaxi_travelerName';
+const TRAVELER_NAME_KEY = 'airportTaxi_travelerName';
+const TRAVELER_ID_KEY = 'airportTaxi_travelerId';
 
 export default function TravelerDashboard() {
   const navigate = useNavigate();
-  const [travelerName, setTravelerName] = useState(() => localStorage.getItem(TRAVELER_KEY) || '');
+  const [travelerName, setTravelerName] = useState(() => localStorage.getItem(TRAVELER_NAME_KEY) || '');
+  const [travelerId, setTravelerId] = useState(() => localStorage.getItem(TRAVELER_ID_KEY) || '');
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -32,10 +35,10 @@ export default function TravelerDashboard() {
 
   // If no identity, redirect to landing
   useEffect(() => {
-    if (!travelerName) {
+    if (!travelerName && !travelerId) {
       navigate('/', { replace: true });
     }
-  }, [travelerName, navigate]);
+  }, [travelerName, travelerId, navigate]);
 
   const fetchRequests = async () => {
     setLoading(true);
@@ -43,11 +46,24 @@ export default function TravelerDashboard() {
     try {
       const params = filter === 'open' ? { status: 'open' } : {};
       const res = await rideRequestApi.getRideRequests(params);
-      // Filter to only this traveler's requests
       const all = res.data || [];
-      const mine = travelerName
-        ? all.filter(r => (r.travelerName || '').toLowerCase() === travelerName.toLowerCase())
-        : all;
+
+      const cleanName = (travelerName || '').trim().toLowerCase();
+      const cleanId = (travelerId || '').trim().toLowerCase();
+
+      // Case-insensitive filtering matching either Traveler ID or Traveler Name
+      const mine = all.filter((r) => {
+        const reqName = (r.travelerName || '').trim().toLowerCase();
+        const reqId = (r.travelerId || '').trim().toLowerCase();
+
+        if (cleanId && reqId && cleanId === reqId) return true;
+        if (cleanName && reqName && (cleanName === reqName || reqName.includes(cleanName) || cleanName.includes(reqName))) return true;
+        if (cleanId && !cleanName && reqId === cleanId) return true;
+        if (cleanName && !cleanId && (cleanName === reqName || reqName.includes(cleanName))) return true;
+
+        return false;
+      });
+
       setRequests(mine);
     } catch (err) {
       setError(err.response?.data?.error || err.message || 'Failed to load ride requests');
@@ -57,11 +73,12 @@ export default function TravelerDashboard() {
   };
 
   useEffect(() => {
-    if (travelerName) fetchRequests();
-  }, [filter, travelerName]);
+    if (travelerName || travelerId) fetchRequests();
+  }, [filter, travelerName, travelerId]);
 
   const handleSwitchUser = () => {
-    localStorage.removeItem(TRAVELER_KEY);
+    localStorage.removeItem(TRAVELER_NAME_KEY);
+    localStorage.removeItem(TRAVELER_ID_KEY);
     navigate('/', { replace: true });
   };
 
@@ -83,16 +100,47 @@ export default function TravelerDashboard() {
     }
   };
 
+  // 100% Case-Insensitive Search (lowercase & uppercase friendly)
   const filteredRequests = requests.filter((req) => {
     if (!searchTerm.trim()) return true;
-    const term = searchTerm.toLowerCase();
-    const nameMatch = (req.travelerName || '').toLowerCase().includes(term);
+    const term = searchTerm.trim().toLowerCase();
+
     const idMatch = (req.id || '').toLowerCase().includes(term);
-    const flightMatch = (req.flightId || '').toLowerCase().includes(term) ||
-      (req.flight?.flight_number || '').toLowerCase().includes(term);
-    const hotelMatch = (req.hotelId || '').toLowerCase().includes(term) ||
-      (req.hotel?.name || '').toLowerCase().includes(term);
-    return nameMatch || idMatch || flightMatch || hotelMatch;
+    const travelerIdMatch = (req.travelerId || '').toLowerCase().includes(term);
+    const nameMatch = (req.travelerName || '').toLowerCase().includes(term);
+
+    const flightIdMatch = (req.flightId || '').toLowerCase().includes(term);
+    const flightNumMatch = (req.flight?.flight_number || '').toLowerCase().includes(term);
+    const airlineMatch = (req.flight?.airline || '').toLowerCase().includes(term);
+    const originMatch = (req.flight?.from || '').toLowerCase().includes(term);
+    const destMatch = (req.flight?.to || '').toLowerCase().includes(term);
+
+    const hotelIdMatch = (req.hotelId || '').toLowerCase().includes(term);
+    const hotelNameMatch = (req.hotel?.name || '').toLowerCase().includes(term);
+    const cityMatch = (req.hotel?.city || '').toLowerCase().includes(term);
+    const areaMatch = (req.hotel?.area || '').toLowerCase().includes(term);
+
+    const carMatch = (req.carType || '').toLowerCase().includes(term);
+    const statusMatch = (req.status || '').toLowerCase().includes(term);
+    const priceMatch = String(req.travelerPrice || '').includes(term);
+
+    return (
+      idMatch ||
+      travelerIdMatch ||
+      nameMatch ||
+      flightIdMatch ||
+      flightNumMatch ||
+      airlineMatch ||
+      originMatch ||
+      destMatch ||
+      hotelIdMatch ||
+      hotelNameMatch ||
+      cityMatch ||
+      areaMatch ||
+      carMatch ||
+      statusMatch ||
+      priceMatch
+    );
   });
 
   return (
@@ -104,11 +152,16 @@ export default function TravelerDashboard() {
           <p className="dashboard-subtitle">
             Manage your airport ride requests and track status in real-time
           </p>
-          {travelerName && (
+          {(travelerName || travelerId) && (
             <div className="traveler-identity-bar">
               <User size={14} />
-              <span>Viewing as: <strong>{travelerName}</strong></span>
-              <button className="switch-user-btn" onClick={handleSwitchUser} title="Switch traveler">
+              <span>Viewing as: <strong>{travelerName || 'Traveler'}</strong></span>
+              {travelerId && (
+                <span className="traveler-id-tag" style={{ marginLeft: '4px' }}>
+                  ID: {travelerId}
+                </span>
+              )}
+              <button className="switch-user-btn" onClick={handleSwitchUser} title="Switch traveler identity">
                 <LogOut size={13} />
                 <span>Switch</span>
               </button>
@@ -154,7 +207,7 @@ export default function TravelerDashboard() {
           <input
             type="text"
             className="search-input"
-            placeholder="Search traveler, request ID, hotel..."
+            placeholder="Search request ID, traveler ID, hotel, flight (case-insensitive)..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -189,7 +242,9 @@ export default function TravelerDashboard() {
         <div className="empty-state">
           <Plane size={48} className="empty-icon" />
           <h3>No Ride Requests Found</h3>
-          <p>You haven't posted any airport taxi requests yet. Use 'Create New Ride' to get started.</p>
+          <p>
+            No requests found for identity <strong>{travelerName || travelerId}</strong>. Use 'Create New Ride' to post a transfer.
+          </p>
           <Link to="/traveler/create" className="btn-primary" style={{ marginTop: '1rem' }}>
             <PlusCircle size={18} />
             <span>Post Your First Ride</span>
@@ -199,7 +254,7 @@ export default function TravelerDashboard() {
         <div className="empty-state">
           <Search size={36} className="empty-icon" />
           <h3>No Matching Requests</h3>
-          <p>No ride requests match "{searchTerm}".</p>
+          <p>No ride requests match "{searchTerm}". (Search is case-insensitive)</p>
           <button className="btn-secondary" onClick={() => setSearchTerm('')} style={{ marginTop: '0.75rem' }}>
             Clear Search
           </button>
@@ -214,8 +269,9 @@ export default function TravelerDashboard() {
             return (
               <div key={req.id} className="request-card">
                 <div className="request-card-header">
-                  <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
                     <span className="request-id-badge">{req.id}</span>
+                    {req.travelerId && <span className="traveler-id-tag">ID: {req.travelerId}</span>}
                     <span className="traveler-name-tag">{req.travelerName || 'Traveler'}</span>
                   </div>
                   <span className={`status-pill status-${req.status}`}>
