@@ -1,75 +1,333 @@
-/* Styles for the Landing page (used only by Landing.jsx). */
+/* ==========================================================================
+   LANDING PAGE STYLES (Landing.css)
+   Exact 1:1 recreation of the AirportCarWala design (Image 2)
+   with realistic clean airplane window portal and centered 3D rotating car.
+   ========================================================================== */
 
-/* Full-screen sky background with clouds (image set inline via JSX import). */
-.landing {
-  min-height: 100vh;
-  width: 100%;
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  background-color: #9ec5e8;
+.landing-viewport {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background-color: #031853;
 }
 
-/* Center the entrance card both vertically and horizontally. */
-.landing__main {
-  min-height: 100vh;
-  display: grid;
-  place-items: center;
-  padding: 24px;
-}
+/* ==========================================================================
+   STAGE 1: AIRPLANE WINDOW INTRO (IMAGE 1)
+   Completely clean, cinematic window with ZERO ugly popups/boxes.
+   Inside the glass, a small live view shows the rotating blue sports car!
+   ========================================================================== */
 
-/* The pill-shaped entrance card. */
-.entrance-card {
-  width: min(620px, 100%);
-  padding: 44px 32px 40px;
-  border-radius: 999px;
-  background-color: rgba(30, 38, 63, 0.92);
-  color: #ffffff;
-  text-align: center;
-  border: 2px solid #22d3ee;
-  box-shadow: 0 24px 70px rgba(15, 20, 32, 0.45);
+.window-portal {
+  position: fixed;
+  inset: 0;
+  z-index: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  background-color: #031338;
+  transform-origin: 50% 48%; /* Centers right on the window glass */
+  transition: transform 1.25s cubic-bezier(0.7, 0, 0.2, 1),
+              opacity 1.1s cubic-bezier(0.7, 0, 0.2, 1),
+              filter 1.1s cubic-bezier(0.7, 0, 0.2, 1);
+  will-change: transform, opacity, filter;
+}
+
+.window-portal__bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.window-portal__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
   user-select: none;
 }
 
-.entrance-card:hover,
-.entrance-card:focus {
-  transform: translateY(-3px);
-  box-shadow: 0 30px 80px rgba(15, 20, 32, 0.55);
-  border-color: #67e8f9;
-  outline: none;
+/* Glass Aperture: Small view of the rotating car through the window opening */
+.window-portal__glass-aperture {
+  position: absolute;
+  top: 47.6%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: clamp(210px, 20vw, 290px);
+  height: clamp(310px, 30vw, 420px);
+  border-radius: 96px;
+  overflow: hidden;
+  z-index: 10;
+  box-shadow: 
+    inset 0 0 24px rgba(0, 0, 0, 0.75), 
+    inset 0 0 10px rgba(0, 0, 0, 0.9),
+    0 0 15px rgba(0, 210, 255, 0.25);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
-.entrance-card:focus-visible {
-  outline: 3px solid #67e8f9;
-  outline-offset: 4px;
+.window-portal:hover .window-portal__glass-aperture {
+  transform: translate(-50%, -50%) scale(1.02);
+  box-shadow: 
+    inset 0 0 20px rgba(0, 0, 0, 0.6), 
+    0 0 25px rgba(0, 229, 255, 0.45);
 }
 
-.entrance-card__icon {
+.window-portal__glass-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 52%;
   display: block;
-  font-size: 3rem;
-  line-height: 1;
-  margin-bottom: 18px;
-  transform: rotate(-15deg);
+  transform: scale(1.08);
 }
 
-.entrance-card__title {
-  font-size: clamp(1.8rem, 5vw, 2.8rem);
+/* Hyper-realistic curved airplane window glare / reflection */
+.window-portal__glass-sheen {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    135deg, 
+    rgba(255, 255, 255, 0.38) 0%, 
+    rgba(255, 255, 255, 0.08) 28%, 
+    transparent 45%, 
+    rgba(255, 255, 255, 0.12) 100%
+  );
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* Center Zoom-In Animation Trigger */
+.window-portal--zoomed-in {
+  transform: scale(11);
+  opacity: 0;
+  filter: blur(14px);
+  pointer-events: none;
+}
+
+/* ==========================================================================
+   STAGE 2: MAIN PAGE DESIGN (EXACT 1:1 RECREATION OF IMAGE 2)
+   ========================================================================== */
+
+.main-stage {
+  position: absolute;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background-color: #031c5e;
+  opacity: 0;
+  transform: scale(0.94);
+  filter: blur(8px);
+  transition: opacity 1.15s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 1.15s cubic-bezier(0.16, 1, 0.3, 1),
+              filter 1.15s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: 10;
+}
+
+.main-stage--active {
+  opacity: 1;
+  transform: scale(1);
+  filter: blur(0px);
+}
+
+/* Full-bleed rotating car video layer */
+.main-stage__video-wrap {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  overflow: hidden;
+}
+
+.main-stage__video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 52%; /* Keeps the car perfectly centered */
+  display: block;
+}
+
+/* ==========================================================================
+   HERO OVERLAY (Left Text, Right *SPECS)
+   ========================================================================== */
+
+.hero-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  padding: 0 60px;
+  pointer-events: none;
+}
+
+.hero-overlay__inner {
+  width: 100%;
+  max-width: 1800px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transform: translateY(-10px); /* Visual balance with the car */
+}
+
+/* Left Column: LUXURY CAR RENTALS */
+.hero-overlay__left {
+  pointer-events: auto;
+  max-width: 480px;
+  user-select: none;
+}
+
+.hero-title {
+  font-family: var(--font-heading);
+  font-size: clamp(2.8rem, 4.6vw, 4.5rem);
+  font-weight: 900;
+  line-height: 0.98;
+  letter-spacing: -0.02em;
+  color: #ffffff;
+  text-transform: uppercase;
+  text-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+.hero-subtitle {
+  font-family: var(--font-heading);
+  font-size: clamp(0.85rem, 1.2vw, 1.05rem);
   font-weight: 700;
-  letter-spacing: 0.01em;
+  letter-spacing: 0.07em;
+  color: #ffffff;
+  margin-top: 24px;
+  line-height: 1.45;
+  text-transform: uppercase;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
 }
 
-.entrance-card__subtitle {
-  margin-top: 10px;
-  font-size: clamp(0.95rem, 2.4vw, 1.25rem);
-  color: rgba(255, 255, 255, 0.78);
+/* BOOK NOW ▶ Button */
+.hero-btn-book {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 34px;
+  padding: 12px 24px;
+  background: transparent;
+  border: 2px solid #ffffff;
+  color: #ffffff;
+  font-family: var(--font-heading);
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
 }
 
-/* Small screens: keep the pill card but with less padding. */
-@media (max-width: 640px) {
-  .entrance-card {
-    border-radius: 44px;
-    padding: 36px 24px 32px;
+.hero-btn-book:hover {
+  background: #ffffff;
+  color: #032170;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 25px rgba(255, 255, 255, 0.4);
+}
+
+.hero-btn-arrow {
+  font-size: 0.85rem;
+  transition: transform 0.2s ease;
+}
+
+.hero-btn-book:hover .hero-btn-arrow {
+  transform: translateX(4px);
+}
+
+/* Right Column: *SPECS */
+.hero-overlay__right {
+  pointer-events: auto;
+  user-select: none;
+}
+
+.specs-box {
+  min-width: 260px;
+  text-align: left;
+}
+
+.specs-title {
+  font-family: var(--font-heading);
+  font-size: 1.25rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  color: #ffffff;
+  margin-bottom: 22px;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
+}
+
+.specs-table {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.specs-row {
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  gap: 16px;
+  align-items: baseline;
+}
+
+.specs-label {
+  font-family: var(--font-heading);
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.85);
+  letter-spacing: 0.02em;
+}
+
+.specs-val {
+  font-family: var(--font-heading);
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+/* ==========================================================================
+   RESPONSIVE DESIGN
+   ========================================================================== */
+
+@media (max-width: 1024px) {
+  .hero-overlay {
+    padding: 0 30px;
+  }
+  
+  .hero-title {
+    font-size: 2.8rem;
+  }
+  
+  .specs-box {
+    min-width: 220px;
+  }
+}
+
+@media (max-width: 768px) {
+  .hero-overlay {
+    padding: 90px 24px 80px;
+    align-items: flex-start;
+  }
+  
+  .hero-overlay__inner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 24px;
+    transform: none;
+  }
+  
+  .hero-title {
+    font-size: 2.2rem;
+  }
+  
+  .specs-box {
+    background: rgba(3, 20, 68, 0.6);
+    padding: 16px;
+    border-radius: 8px;
+    backdrop-filter: blur(8px);
   }
 }
