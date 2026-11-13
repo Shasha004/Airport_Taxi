@@ -58,10 +58,24 @@ function validateOffer(request, supplierId, carId, price) {
     throw new Error(`R4 Violation: Supplier "${supplier.name}" does not operate at arrival airport ${flight.to}.`);
   }
 
-  const servesArea = (supplier.areas || []).some(
-    a => a.city.toLowerCase() === hotel.city.toLowerCase() &&
-         a.area.toLowerCase() === hotel.area.toLowerCase()
-  );
+  const targetCity = (hotel.city || '').toLowerCase().trim();
+  const targetArea = (hotel.area || '').toLowerCase().trim();
+  const servesArea = (supplier.areas || []).some(a => {
+    const aCity = (a.city || '').toLowerCase().trim();
+    const aArea = (a.area || '').toLowerCase().trim();
+    return (aCity === targetCity && aArea === targetArea) || (aCity === targetCity);
+  }) || (() => {
+    if (flight && flight.to && supplier.airports && supplier.airports.includes(flight.to)) {
+      const airport = catalogService.getAirportByCode(flight.to);
+      if (airport) {
+        const apCity = (airport.city || '').toLowerCase().trim();
+        const sc = (airport.serves_cities || []).map(c => c.toLowerCase().trim());
+        return apCity === targetCity || sc.includes(targetCity);
+      }
+    }
+    return false;
+  })();
+
   if (!servesArea) {
     throw new Error(`R4 Violation: Supplier "${supplier.name}" does not serve ${hotel.city} (${hotel.area}).`);
   }

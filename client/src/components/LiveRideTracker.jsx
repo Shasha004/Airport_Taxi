@@ -317,7 +317,7 @@ export default function LiveRideTracker({ booking }) {
       }).addTo(map);
 
       traveledPolylineRef.current = L.polyline([[airport.lat, airport.lng]], {
-        color: '#000000',
+        color: '#2563eb',
         weight: 6,
         opacity: 0.95,
       }).addTo(map);
@@ -581,7 +581,7 @@ export default function LiveRideTracker({ booking }) {
               <path
                 d="M 50 230 Q 400 80 750 230"
                 fill="none"
-                stroke="#000000"
+                stroke="#2563eb"
                 strokeWidth="8"
                 strokeDasharray="1000"
                 strokeDashoffset={1000 * (1 - progress)}

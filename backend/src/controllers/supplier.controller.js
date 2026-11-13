@@ -2,6 +2,7 @@ const supplierEligibilityService = require('../services/supplierEligibility.serv
 const catalogService = require('../services/catalog.service');
 const offerRepo = require('../repositories/offer.repository');
 const changeRequestRepo = require('../repositories/changeRequest.repository');
+const bookingRepo = require('../repositories/booking.repository');
 
 class SupplierController {
   getSupplierRequests(req, res, next) {
@@ -19,6 +20,19 @@ class SupplierController {
       const submittedOffersCount = offerRepo.countBySupplier(supplierId);
       const changeRequests = changeRequestRepo.findBySupplierId(supplierId);
       const pendingChangeRequestsCount = changeRequests.filter(c => c.status === 'pending').length;
+      const supplierBookings = bookingRepo.findBySupplierId(supplierId);
+      const confirmedBookings = supplierBookings.filter(b => b.status === 'confirmed');
+
+      // Enrich bookings with flight and hotel metadata for display
+      const enrichedBookings = confirmedBookings.map(b => {
+        const flight = catalogService.getFlightById(b.flightId);
+        const hotel = catalogService.getHotelById(b.hotelId);
+        return {
+          ...b,
+          flight,
+          hotel,
+        };
+      });
 
       res.json({
         success: true,
@@ -36,7 +50,9 @@ class SupplierController {
           eligibleRequestsCount: eligibleRequests.length,
           submittedOffersCount,
           pendingChangeRequestsCount,
+          confirmedBookingsCount: confirmedBookings.length,
         },
+        bookings: enrichedBookings,
         count: eligibleRequests.length,
         data: eligibleRequests,
       });

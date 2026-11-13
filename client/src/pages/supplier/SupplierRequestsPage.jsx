@@ -25,6 +25,8 @@ export default function SupplierRequestsPage() {
   const [supplierData, setSupplierData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [cityFilter, setCityFilter] = useState('ALL');
+  const [airportFilter, setAirportFilter] = useState('ALL');
 
   useEffect(() => {
     async function loadSuppliers() {
@@ -79,11 +81,14 @@ export default function SupplierRequestsPage() {
               value={supplierId}
               onChange={(e) => handleSupplierChange(e.target.value)}
             >
-              {suppliers.map((s) => (
-                <option key={s.company_id} value={s.company_id}>
-                  {s.name} ({s.company_id})
-                </option>
-              ))}
+              {suppliers.map((s) => {
+                const cities = [...new Set((s.areas || []).map((a) => a.city))].join(', ');
+                return (
+                  <option key={s.company_id} value={s.company_id}>
+                    {s.name} ({s.company_id}) — Airports: {s.airports.join(', ')} | City: {cities}
+                  </option>
+                );
+              })}
             </select>
             <button className="btn-secondary" onClick={loadRequests} disabled={loading}>
               <RefreshCw size={16} className={loading ? 'spin' : ''} />
@@ -91,12 +96,62 @@ export default function SupplierRequestsPage() {
             </button>
           </div>
         </div>
+
+        {supplierData?.supplier && (
+          <div className="supplier-profile-card" style={{ marginTop: '1rem', padding: '0.85rem 1.25rem' }}>
+            <div className="profile-meta-row" style={{ fontSize: '0.88rem' }}>
+              <span>Supplier: <strong>{supplierData.supplier.name}</strong></span>
+              <span className="meta-dot">•</span>
+              <span>Airports Served: <strong style={{ color: '#0284c7' }}>{supplierData.supplier.airports.join(', ')}</strong></span>
+              <span className="meta-dot">•</span>
+              <span>Cities Served: <strong style={{ color: '#16a34a' }}>{[...new Set((supplierData.supplier.areas || []).map(a => a.city))].join(', ') || 'All Cities'}</strong></span>
+              <span className="meta-dot">•</span>
+              <span>Eligible Demands: <strong>{supplierData.data?.length || 0} Open Requests</strong></span>
+            </div>
+          </div>
+        )}
       </div>
 
       {error && (
         <div className="alert-banner alert-error">
           <AlertCircle size={20} />
           <span>{error}</span>
+        </div>
+      )}
+
+      {/* City & Airport Filters */}
+      {supplierData && supplierData.data?.length > 0 && (
+        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginBottom: '1.25rem', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <Filter size={16} className="text-muted" />
+            <span style={{ fontSize: '0.88rem', fontWeight: 600 }}>Filter by City:</span>
+            <select
+              className="input-field"
+              style={{ width: 'auto', padding: '0.35rem 0.75rem', fontSize: '0.88rem' }}
+              value={cityFilter}
+              onChange={(e) => setCityFilter(e.target.value)}
+            >
+              <option value="ALL">All Cities ({supplierData.data.length})</option>
+              {[...new Set(supplierData.data.map(r => r.hotel?.city).filter(Boolean))].map(city => (
+                <option key={city} value={city}>{city}</option>
+              ))}
+            </select>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <span style={{ fontSize: '0.88rem', fontWeight: 600 }}>Filter by Airport:</span>
+            <select
+              className="input-field"
+              style={{ width: 'auto', padding: '0.35rem 0.75rem', fontSize: '0.88rem' }}
+              value={airportFilter}
+              onChange={(e) => setAirportFilter(e.target.value)}
+            >
+              <option value="ALL">All Airports ({supplierData.data.length})</option>
+              {[...new Set(supplierData.data.map(r => r.flight?.to).filter(Boolean))].map(apt => (
+                <option key={apt} value={apt}>{apt}</option>
+              ))}
+            </select>
+          </div>
         </div>
       )}
 
@@ -121,7 +176,13 @@ export default function SupplierRequestsPage() {
         </div>
       ) : (
         <div className="requests-grid">
-          {supplierData.data.map((req) => {
+          {supplierData.data
+            .filter((r) => {
+              if (cityFilter !== 'ALL' && r.hotel?.city !== cityFilter) return false;
+              if (airportFilter !== 'ALL' && r.flight?.to !== airportFilter) return false;
+              return true;
+            })
+            .map((req) => {
             const childCount = Array.isArray(req.childAges) ? req.childAges.length : 0;
             const totalPassengers = (req.adults || 0) + childCount;
 
@@ -132,7 +193,15 @@ export default function SupplierRequestsPage() {
                     <span className="request-id-badge">{req.id}</span>
                     <span className="traveler-name-tag">{req.travelerName || 'Traveler'}</span>
                   </div>
-                  <span className="eligible-badge">✓ ELIGIBLE (R4)</span>
+                  <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
+                    <span className="request-id-badge" style={{ background: '#e0f2fe', color: '#0369a1', fontWeight: 700 }}>
+                      ✈️ {req.flight?.to || 'NRT'}
+                    </span>
+                    <span className="request-id-badge" style={{ background: '#dcfce7', color: '#15803d', fontWeight: 700 }}>
+                      📍 {req.hotel?.city || 'Tokyo'}
+                    </span>
+                    <span className="eligible-badge">✓ ELIGIBLE (R4)</span>
+                  </div>
                 </div>
 
                 <div className="request-route-banner">

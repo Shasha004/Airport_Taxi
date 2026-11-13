@@ -45,12 +45,29 @@ function canSupplierServeRequest(supplier, request, flight, hotel, driveMinutes)
     return false;
   }
 
-  // 2 & 3. Check hotel city and area
+  // 2 & 3. Check hotel city and area (city-based and area-based matching)
   const areas = supplier.areas || [];
-  const servesArea = areas.some(
-    a => a.city.toLowerCase() === targetHotel.city.toLowerCase() &&
-         a.area.toLowerCase() === targetHotel.area.toLowerCase()
-  );
+  const targetCity = (targetHotel.city || '').toLowerCase().trim();
+  const targetArea = (targetHotel.area || '').toLowerCase().trim();
+
+  const servesArea = areas.some(a => {
+    const aCity = (a.city || '').toLowerCase().trim();
+    const aArea = (a.area || '').toLowerCase().trim();
+    // Direct area match or city-level coverage
+    return (aCity === targetCity && aArea === targetArea) || (aCity === targetCity);
+  }) || (() => {
+    // If supplier operates at arrival airport, check if airport serves this hotel city
+    if (targetFlight && targetFlight.to && supplier.airports && supplier.airports.includes(targetFlight.to)) {
+      const airport = catalogService.getAirportByCode(targetFlight.to);
+      if (airport) {
+        const apCity = (airport.city || '').toLowerCase().trim();
+        const sc = (airport.serves_cities || []).map(c => c.toLowerCase().trim());
+        return apCity === targetCity || sc.includes(targetCity);
+      }
+    }
+    return false;
+  })();
+
   if (!servesArea) {
     return false;
   }
@@ -105,12 +122,27 @@ function explainIneligibility(supplier, request) {
     reasons.push(`Supplier does not operate at arrival airport ${flight.to}. Serves: [${airports.join(', ')}]`);
   }
 
-  // 2. City & Area check
+  // 2. City & Area check (city-based and area-based coverage)
   const areas = supplier.areas || [];
-  const servesArea = areas.some(
-    a => a.city.toLowerCase() === hotel.city.toLowerCase() &&
-         a.area.toLowerCase() === hotel.area.toLowerCase()
-  );
+  const targetCity = (hotel.city || '').toLowerCase().trim();
+  const targetArea = (hotel.area || '').toLowerCase().trim();
+
+  const servesArea = areas.some(a => {
+    const aCity = (a.city || '').toLowerCase().trim();
+    const aArea = (a.area || '').toLowerCase().trim();
+    return (aCity === targetCity && aArea === targetArea) || (aCity === targetCity);
+  }) || (() => {
+    if (flight && flight.to && supplier.airports && supplier.airports.includes(flight.to)) {
+      const airport = catalogService.getAirportByCode(flight.to);
+      if (airport) {
+        const apCity = (airport.city || '').toLowerCase().trim();
+        const sc = (airport.serves_cities || []).map(c => c.toLowerCase().trim());
+        return apCity === targetCity || sc.includes(targetCity);
+      }
+    }
+    return false;
+  })();
+
   if (!servesArea) {
     reasons.push(`Supplier does not drive to ${hotel.city} (${hotel.area})`);
   }
@@ -185,9 +217,13 @@ function getSupplierEligibleRequests(supplierId) {
   if (!supplier) return [];
 
   const openRequests = rideRequestRepo.findOpenRequests();
-  return openRequests.filter(req => {
+  const eligible = openRequests.filter(req => {
     return canSupplierServeRequest(supplier, req);
   });
+
+  // Enrich each request with full flight, hotel, and route metadata
+  const rideRequestService = require('./rideRequest.service');
+  return eligible.map(req => rideRequestService.enrichRequest(req));
 }
 
 module.exports = {

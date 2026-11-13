@@ -1,5 +1,6 @@
 const rideRequestRepo = require('../repositories/rideRequest.repository');
 const bookingRepo = require('../repositories/booking.repository');
+const offerRepo = require('../repositories/offer.repository');
 const changeRequestRepo = require('../repositories/changeRequest.repository');
 const changeRequestService = require('./changeRequest.service');
 const requestValidator = require('../validators/request.validator');
@@ -247,6 +248,9 @@ class RideRequestService {
       supplier = catalogService.getSupplierById(booking.supplierId);
     }
 
+    // Surface supplier offers so the traveler sees them reflected on their request
+    const offersCount = offerRepo.countAssignedByRequestId(request.id);
+
     return {
       ...request,
       booking: booking ? {
@@ -255,6 +259,8 @@ class RideRequestService {
       } : null,
       hasBooking: Boolean(booking && booking.status === 'confirmed' && request.status !== 'cancelled'),
       isCancelled: Boolean(request.status === 'cancelled' || (booking && booking.status === 'cancelled')),
+      offersCount,
+      hasOffers: offersCount > 0,
       pendingChangeRequest,
       changeRequests,
       flight: flight ? {

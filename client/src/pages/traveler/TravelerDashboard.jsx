@@ -482,6 +482,18 @@ export default function TravelerDashboard() {
                   )
                 )}
 
+                {req.hasOffers && !req.hasBooking && req.status !== 'cancelled' && (
+                  <div className="offers-received-banner">
+                    <Car size={16} style={{ flexShrink: 0 }} />
+                    <div>
+                      <strong>
+                        {req.offersCount} {req.offersCount === 1 ? 'offer' : 'offers'} received!
+                      </strong>{' '}
+                      Suppliers have submitted prices for your ride. Tap "View Offers" to review and book.
+                    </div>
+                  </div>
+                )}
+
                 {req.pendingChangeRequest && (
                   <div className="delay-alert-banner">
                     <AlertCircle size={16} style={{ flexShrink: 0 }} />
@@ -612,7 +624,9 @@ export default function TravelerDashboard() {
                         className="btn-primary"
                         style={{ flex: 1, justifyContent: 'center' }}
                       >
-                        <span>View Offers</span>
+                        <span>
+                          View Offers{req.offersCount > 0 ? ` (${req.offersCount})` : ''}
+                        </span>
                         <Car size={16} />
                       </Link>
                       <button

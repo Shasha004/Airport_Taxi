@@ -98,6 +98,20 @@ class OfferRepository {
     const row = stmt.get(supplierId);
     return row ? row.count : 0;
   }
+
+  // Count distinct active (assigned) offers for a request so duplicate
+  // clicks from a supplier never inflate the number the traveler sees.
+  countAssignedByRequestId(requestId) {
+    const db = getDatabase();
+    const stmt = db.prepare(`
+      SELECT COUNT(*) as count FROM (
+        SELECT DISTINCT supplier_id, car_id FROM offers
+        WHERE request_id = ? AND status = 'assigned'
+      )
+    `);
+    const row = stmt.get(requestId);
+    return row ? row.count : 0;
+  }
 }
 
 module.exports = new OfferRepository();

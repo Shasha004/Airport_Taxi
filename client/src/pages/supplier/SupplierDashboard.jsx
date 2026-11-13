@@ -115,11 +115,14 @@ export default function SupplierDashboard() {
             value={selectedSupplierId}
             onChange={(e) => setSelectedSupplierId(e.target.value)}
           >
-            {suppliers.map((s) => (
-              <option key={s.company_id} value={s.company_id}>
-                {s.name} ({s.company_id}) — {s.airports.join(', ')}
-              </option>
-            ))}
+            {suppliers.map((s) => {
+              const cities = [...new Set((s.areas || []).map((a) => a.city))].join(', ');
+              return (
+                <option key={s.company_id} value={s.company_id}>
+                  {s.name} ({s.company_id}) — Airports: {s.airports.join(', ')} | City: {cities}
+                </option>
+              );
+            })}
           </select>
         </div>
       </div>
@@ -153,6 +156,8 @@ export default function SupplierDashboard() {
                   </span>
                   <span className="meta-dot">•</span>
                   <span>Operating Airports: <strong>{supplierData.supplier.airports.join(', ')}</strong></span>
+                  <span className="meta-dot">•</span>
+                  <span>Service Cities: <strong>{[...new Set((supplierData.supplier.areas || []).map(a => a.city))].join(', ') || 'All Cities'}</strong></span>
                   <span className="meta-dot">•</span>
                   <span>Hours: <strong>{supplierData.supplier.service_from} – {supplierData.supplier.service_until}</strong></span>
                   <span className="meta-dot">•</span>
@@ -214,11 +219,11 @@ export default function SupplierDashboard() {
 
                       <div className="cr-compare-col">
                         <span className="tag highlight">Current (Delayed) Schedule</span>
-                        <strong style={{ color: '#000000' }}>
+                        <strong style={{ color: '#778DA9' }}>
                           {cr.newFlight?.flight_number || cr.currentFlight?.flight_number || cr.currentFlightId}
                         </strong>
                         <span>Lands: {cr.newFlight?.arrival_local || cr.currentFlight?.arrival_local}</span>
-                        <strong style={{ color: '#000000', fontSize: '1.05rem' }}>
+                        <strong style={{ color: '#2563eb', fontSize: '1.05rem' }}>
                           New Pickup: {cr.newPickupAt}
                           {cr.delayMinutes ? ` (+${cr.delayMinutes}m delay)` : ''}
                         </strong>
@@ -286,6 +291,23 @@ export default function SupplierDashboard() {
 
             <div className="metric-card">
               <div className="metric-top">
+                <span className="metric-lbl">Confirmed Bookings</span>
+                <CheckCircle size={24} className="metric-icon text-success" />
+              </div>
+              <strong className="metric-val">{supplierData.stats.confirmedBookingsCount || 0}</strong>
+              <p className="metric-sub">Active confirmed trips booked with your fleet</p>
+              {supplierData.bookings && supplierData.bookings.length > 0 ? (
+                <a href="#confirmed-bookings" className="metric-link">
+                  <span>View Bookings</span>
+                  <ArrowRight size={14} />
+                </a>
+              ) : (
+                <span className="metric-sub" style={{ fontSize: '0.8rem' }}>No active bookings</span>
+              )}
+            </div>
+
+            <div className="metric-card">
+              <div className="metric-top">
                 <span className="metric-lbl">Submitted Offers</span>
                 <FileText size={24} className="metric-icon" />
               </div>
@@ -316,6 +338,49 @@ export default function SupplierDashboard() {
               </Link>
             </div>
           </div>
+
+          {/* Confirmed Bookings Section */}
+          {supplierData.bookings && supplierData.bookings.length > 0 && (
+            <div id="confirmed-bookings" className="fleet-overview-section" style={{ marginBottom: '2rem' }}>
+              <h3 className="section-title">
+                <CheckCircle size={20} className="text-success" />
+                <span>Confirmed Bookings for {supplierData.supplier.name} ({supplierData.bookings.length})</span>
+              </h3>
+              <div className="pending-changes-grid">
+                {supplierData.bookings.map((b) => (
+                  <div key={b.id || b.bookingNumber} className="urgent-cr-card" style={{ borderLeft: '4px solid #10b981' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
+                      <div>
+                        <span className="request-id-badge" style={{ background: '#ecfdf5', color: '#065f46' }}>
+                          Booking #{b.bookingNumber}
+                        </span>
+                        <strong style={{ marginLeft: '0.6rem', fontSize: '0.95rem' }}>
+                          Vehicle: {b.carId} • Fare: ₹{Number(b.price || 0).toLocaleString()}
+                        </strong>
+                      </div>
+                      <span className="status-pill status-confirmed">CONFIRMED BOOKING</span>
+                    </div>
+
+                    <div className="cr-compare-box" style={{ marginTop: '0.75rem' }}>
+                      <div className="cr-compare-col">
+                        <span className="tag">Arrival Flight</span>
+                        <strong>{b.flight?.flight_number || b.flightId}</strong>
+                        <span>Airport: {b.flight?.to || 'NRT'}</span>
+                        <span>Lands: {b.flight?.arrival_local}</span>
+                      </div>
+                      <div style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--gray-400)' }}>➔</div>
+                      <div className="cr-compare-col">
+                        <span className="tag">Destination Hotel</span>
+                        <strong>{b.hotel?.name || b.hotelId}</strong>
+                        <span>City: {b.hotel?.city || 'Tokyo'}, {b.hotel?.area}</span>
+                        <span style={{ fontWeight: 600 }}>Pickup: {b.pickupAt}</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Fleet Overview */}
           <div className="fleet-overview-section">
