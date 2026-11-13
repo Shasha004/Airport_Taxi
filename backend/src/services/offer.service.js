@@ -16,8 +16,13 @@ class OfferService {
     const validated = offerValidator.validateOffer(request, supplierId, carId, price);
 
     // Idempotency check: if this supplier already has an assigned offer for this request+car, return existing
+    // (prevents duplicate offers when supplier clicks submit multiple times)
     const existingOffer = offerRepo.findAssignedByRequestAndSupplierAndCar(requestId, supplierId, carId);
     if (existingOffer) {
+      if (Number(existingOffer.offerPrice) !== Number(validated.price)) {
+        const updated = offerRepo.updateCarAndPrice(existingOffer.id, carId, validated.price);
+        return this.enrichOffer(updated);
+      }
       return this.enrichOffer(existingOffer);
     }
 
@@ -45,7 +50,17 @@ class OfferService {
 
   listOffersForRequest(requestId) {
     const offers = offerRepo.findByRequestId(requestId);
-    return offers.map(o => this.enrichOffer(o));
+    // Deduplicate any identical offers from multiple rapid clicks
+    const seen = new Set();
+    const unique = [];
+    for (const o of offers) {
+      const key = `${o.requestId}_${o.supplierId}_${o.carId}_${o.status}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        unique.push(o);
+      }
+    }
+    return unique.map(o => this.enrichOffer(o));
   }
 
   listOffersForSupplier(supplierId) {

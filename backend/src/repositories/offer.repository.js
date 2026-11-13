@@ -85,6 +85,13 @@ class OfferRepository {
     return formatOffer(row);
   }
 
+  updateCarAndPrice(id, carId, offerPrice) {
+    const db = getDatabase();
+    const stmt = db.prepare('UPDATE offers SET car_id = ?, offer_price = ? WHERE id = ?');
+    stmt.run(carId, Number(offerPrice), id);
+    return this.findById(id);
+  }
+
   countBySupplier(supplierId) {
     const db = getDatabase();
     const stmt = db.prepare('SELECT COUNT(*) as count FROM offers WHERE supplier_id = ?');

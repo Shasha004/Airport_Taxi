@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import {
   Plane,
@@ -18,6 +18,7 @@ import { catalogApi, routeApi, rideRequestApi } from '../../api/api';
 
 export default function CreateRidePage() {
   const navigate = useNavigate();
+  const submitLockRef = useRef(false);
 
   // Catalog state
   const [flights, setFlights] = useState([]);
@@ -205,6 +206,7 @@ export default function CreateRidePage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (submitLockRef.current) return;
     setFormErrors([]);
     setSuccessData(null);
 
@@ -215,6 +217,7 @@ export default function CreateRidePage() {
       return;
     }
 
+    submitLockRef.current = true;
     setSubmitting(true);
     try {
       const payload = {
@@ -231,9 +234,10 @@ export default function CreateRidePage() {
         carType: carType || null,
       };
 
-      const res = await rideRequestApi.createRideRequest(payload);
-      setSuccessData(res.data);
+      await rideRequestApi.createRideRequest(payload);
+      navigate('/traveler');
     } catch (err) {
+      submitLockRef.current = false;
       const errorMsg = err.response?.data?.error || err.message || 'Failed to submit ride request';
       const backendErrors = err.response?.data?.errors || [errorMsg];
       setFormErrors(backendErrors);

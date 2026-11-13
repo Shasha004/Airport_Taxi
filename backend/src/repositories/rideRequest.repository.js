@@ -99,6 +99,47 @@ class RideRequestRepository {
     return formatRequest(row);
   }
 
+  findDuplicateOpenRequest({ travelerId, travelerName, flightId, hotelId, pickupAt, travelerPrice, adults }) {
+    const db = getDatabase();
+    const pickupPrefix = (pickupAt || '').slice(0, 16);
+    const cleanTravelerId = travelerId ? travelerId.trim() : null;
+    const cleanTravelerName = travelerName ? travelerName.trim() : null;
+
+    const query = `
+      SELECT * FROM ride_requests
+      WHERE status = 'open'
+        AND flight_id = ?
+        AND hotel_id = ?
+        AND (pickup_at = ? OR pickup_at LIKE ?)
+        AND ABS(traveler_price - ?) < 0.01
+        AND adults = ?
+        AND (
+          (? IS NOT NULL AND LOWER(traveler_id) = LOWER(?))
+          OR (? IS NOT NULL AND LOWER(traveler_name) = LOWER(?))
+          OR (? IS NULL AND ? IS NULL)
+        )
+      ORDER BY created_at DESC
+      LIMIT 1
+    `;
+
+    const row = db.prepare(query).get(
+      flightId,
+      hotelId,
+      pickupAt,
+      `${pickupPrefix}%`,
+      Number(travelerPrice),
+      Number(adults || 1),
+      cleanTravelerId,
+      cleanTravelerId,
+      cleanTravelerName,
+      cleanTravelerName,
+      cleanTravelerId,
+      cleanTravelerName
+    );
+
+    return formatRequest(row);
+  }
+
   findAll(filters = {}) {
     const db = getDatabase();
     let query = 'SELECT * FROM ride_requests WHERE 1=1';

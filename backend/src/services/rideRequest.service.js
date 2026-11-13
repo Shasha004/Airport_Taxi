@@ -30,13 +30,32 @@ class RideRequestService {
       carType,
     } = validationResult.data;
 
+    const travelerId = payload.travelerId || payload.traveler_id;
+
+    // Deduplication check: if an identical open request was recently submitted
+    // (e.g. from multiple rapid clicks on submit), return the existing open request
+    // so only ONE request is created and reflected.
+    const existingDuplicate = rideRequestRepo.findDuplicateOpenRequest({
+      travelerId,
+      travelerName,
+      flightId,
+      hotelId,
+      pickupAt: pickupTime,
+      travelerPrice,
+      adults,
+    });
+
+    if (existingDuplicate) {
+      return this.enrichRequest(existingDuplicate);
+    }
+
     // Generate unique request ID: REQ- followed by timestamp suffix
     const randomSuffix = Math.floor(1000 + Math.random() * 9000);
     const generatedId = `REQ-${Date.now().toString().slice(-4)}${randomSuffix}`;
 
     const newRecord = {
       id: payload.id || payload.requestId || generatedId,
-      travelerId: payload.travelerId || payload.traveler_id,
+      travelerId,
       travelerName,
       flightId,
       hotelId,
@@ -72,7 +91,18 @@ class RideRequestService {
 
   listRideRequests(filters = {}) {
     const requests = rideRequestRepo.findAll(filters);
-    return requests.map(req => this.enrichRequest(req));
+    const deduplicated = [];
+    const seen = new Set();
+    for (const req of requests) {
+      const key = req.status === 'open'
+        ? `${(req.travelerName || '').trim().toLowerCase()}_${req.flightId}_${req.hotelId}_${(req.pickupAt || '').slice(0, 16)}_${req.travelerPrice}`
+        : `id_${req.id}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        deduplicated.push(req);
+      }
+    }
+    return deduplicated.map(req => this.enrichRequest(req));
   }
 
   getTravelers() {

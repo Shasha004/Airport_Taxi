@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useSearchParams, useNavigate, Link } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -21,6 +21,7 @@ export default function CreateOfferPage() {
   const [searchParams] = useSearchParams();
   const initialSupplierId = searchParams.get('supplierId') || 'TX-JP-01';
   const navigate = useNavigate();
+  const submitLockRef = useRef(false);
 
   const [request, setRequest] = useState(null);
   const [suppliers, setSuppliers] = useState([]);
@@ -108,6 +109,7 @@ export default function CreateOfferPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (submitLockRef.current) return;
     setError(null);
     setSuccessData(null);
 
@@ -126,6 +128,7 @@ export default function CreateOfferPage() {
       return;
     }
 
+    submitLockRef.current = true;
     setSubmitting(true);
     try {
       const payload = {
@@ -134,9 +137,10 @@ export default function CreateOfferPage() {
         price: Number(offerPrice),
       };
 
-      const res = await offerApi.createOffer(requestId, payload);
-      setSuccessData(res.data);
+      await offerApi.createOffer(requestId, payload);
+      navigate(`/supplier/requests?supplierId=${supplierId}`);
     } catch (err) {
+      submitLockRef.current = false;
       setError(err.response?.data?.error || err.message || 'Failed to submit offer');
     } finally {
       setSubmitting(false);
