@@ -4,14 +4,14 @@ import '../css/Navbar.css';
 /**
  * Navbar Component for Landing Page.
  * Links to the separate Traveler module (http://localhost:5174/)
- * and allows navigating between Landing and Cabowner views.
+ * and Cab Owner module (http://localhost:5175/).
  */
-function Navbar({ activeTab = 'landing', onNavigate }) {
+function Navbar() {
   return (
     <header className="navbar">
       <div className="container navbar__inner">
         {/* Brand Logo & Name */}
-        <div className="navbar__brand" onClick={() => onNavigate('landing')}>
+        <div className="navbar__brand">
           <span className="navbar__logo">AT</span>
           <span className="navbar__title">Airport Taxi</span>
           <span className="navbar__sub">RIDE OFFERS</span>
@@ -19,13 +19,9 @@ function Navbar({ activeTab = 'landing', onNavigate }) {
 
         {/* Center Nav Links */}
         <nav className="navbar__links" aria-label="Main Navigation">
-          <button
-            type="button"
-            onClick={() => onNavigate('landing')}
-            className={`navbar__link ${activeTab === 'landing' ? 'navbar__link--active' : ''}`}
-          >
+          <span className="navbar__link navbar__link--active">
             Home / Overview
-          </button>
+          </span>
           
           {/* Direct link to the separate Traveler application on port 5174 */}
           <a
@@ -36,13 +32,14 @@ function Navbar({ activeTab = 'landing', onNavigate }) {
             Traveller &rarr;
           </a>
 
-          <button
-            type="button"
-            onClick={() => onNavigate('cabowner')}
-            className={`navbar__link ${activeTab === 'cabowner' ? 'navbar__link--active' : ''}`}
+          {/* Direct link to the separate Cab Owner application on port 5175 */}
+          <a
+            href="http://localhost:5175/"
+            className="navbar__link"
+            title="Open Cab Owner Portal"
           >
-            Cab Owner
-          </button>
+            Cab Owner &rarr;
+          </a>
         </nav>
 
         {/* Right CTA: opens Traveler Create Ride flow */}

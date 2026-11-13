@@ -113,3 +113,15 @@
   }
 }
 
+/* Hide number input spinners (up/down arrows) for free text entry */
+.create__form input[type="number"]::-webkit-outer-spin-button,
+.create__form input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.create__form input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+

@@ -63,6 +63,10 @@ class RoutePricingService {
       maxPrice: route.price_max_inr,
       price_min_inr: route.price_min_inr,
       price_max_inr: route.price_max_inr,
+      distance_km: route.distance_km,
+      drive_minutes: route.drive_minutes,
+      distanceKm: route.distance_km,
+      driveMinutes: route.drive_minutes,
       currency: 'INR',
       route: {
         airport: route.airport,

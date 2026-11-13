@@ -14,13 +14,13 @@ function Navbar({ activeView = 'dashboard', onNavigate }) {
         <a href="http://localhost:5173/" className="navbar__brand" title="Back to Landing Page">
           <span className="navbar__logo">AT</span>
           <span className="navbar__title">Airport Taxi</span>
-          <span className="navbar__sub">TRAVELER</span>
+          <span className="navbar__sub">RIDE OFFERS</span>
         </a>
 
         {/* Center Nav Links */}
         <nav className="navbar__links" aria-label="Traveler Navigation">
-          <a href="http://localhost:5173/" className="navbar__link">
-            &larr; Landing Page
+          <a href="http://localhost:5173/" className="navbar__link" title="Return to Landing Page">
+            Select Role
           </a>
           <button
             type="button"

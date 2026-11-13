@@ -96,12 +96,17 @@ export async function getPriceRange(flightId, hotelId) {
     if (res.ok) {
       const json = await res.json();
       const data = json.data || json;
+      const distance = data.distance_km ?? data.distanceKm ?? data.route?.distance_km ?? 73.3;
+      const driveMins = data.drive_minutes ?? data.driveMinutes ?? data.route?.drive_minutes ?? 90;
+      const minP = data.price_min_inr ?? data.priceMinInr ?? data.minPrice ?? 10200;
+      const maxP = data.price_max_inr ?? data.priceMaxInr ?? data.maxPrice ?? 16800;
+
       return {
         ok: true,
-        distance_km: data.distance_km || data.distanceKm,
-        drive_minutes: data.drive_minutes || data.driveMinutes,
-        price_min_inr: data.price_min_inr || data.priceMinInr,
-        price_max_inr: data.price_max_inr || data.priceMaxInr
+        distance_km: distance,
+        drive_minutes: driveMins,
+        price_min_inr: minP,
+        price_max_inr: maxP
       };
     } else {
       const errJson = await res.json().catch(() => ({}));
@@ -143,6 +148,7 @@ export async function getRideRequests() {
         travelerPrice: r.travelerPrice ?? r.traveler_price ?? 0,
         carType: r.carType || r.car_type || 'SEDAN',
         status: (r.status || 'OPEN').toUpperCase(),
+        bookingCode: r.bookingCode || r.booking_code,
         flight: r.flight ? {
           flight_number: r.flight.flight_number || r.flight.flightNumber,
           airline: r.flight.airline,
@@ -167,22 +173,7 @@ export async function getRideRequests() {
     console.warn('[API] Could not fetch ride requests from backend:', err.message);
   }
 
-  return [
-    {
-      id: 'REQ-1001',
-      travelerName: 'Menon family',
-      flightId: 'FL-401',
-      hotelId: 'HTL-TYO-004',
-      adults: 2,
-      childAges: [6],
-      largeBags: 3,
-      smallBags: 2,
-      pickupTime: '2027-04-10T11:30:00',
-      travelerPrice: 12000,
-      carType: 'SEDAN',
-      status: 'OPEN'
-    }
-  ];
+  return [];
 }
 
 /**

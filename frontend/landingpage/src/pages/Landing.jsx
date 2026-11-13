@@ -1,6 +1,5 @@
-import React, { useState } from 'react';
+import React from 'react';
 import Navbar from '../components/Navbar.jsx';
-import CabownerDashboard from './CabownerDashboard.jsx';
 import '../css/Landing.css';
 
 const rules = [
@@ -45,106 +44,97 @@ function FeatureList({ items }) {
 }
 
 function Landing() {
-  // activeTab: 'landing' | 'cabowner'
-  const [activeTab, setActiveTab] = useState('landing');
-
   return (
     <div className="landing-app">
-      {/* Top Universal Navbar with link to Traveller module */}
-      <Navbar activeTab={activeTab} onNavigate={setActiveTab} />
+      {/* Top Universal Navbar with links to Traveller & Cab Owner modules */}
+      <Navbar />
 
-      {activeTab === 'landing' ? (
-        <div className="lp">
-          {/* Hero Section */}
-          <section className="lp-hero">
-            <div className="container lp-hero__inner">
-              <span className="badge badge--fill lp-hero__badge">
-                Airport Ride Offers Platform &bull; Problem 2
-              </span>
-              <h1 className="lp-hero__title">
-                Seamless Airport Transfers with Transparent Pricing
-              </h1>
-              <p className="lp-hero__text">
-                Travelers post their trip with a price; eligible taxi suppliers assign a car and a quote.
-                Compare, book, and receive a 10-digit booking number &mdash; all with zero hidden fees.
-              </p>
-              <div className="lp-hero__actions">
-                <a
-                  href="http://localhost:5174/"
-                  className="btn btn--solid"
-                >
-                  Enter as Traveler &rarr;
-                </a>
-                <button
-                  type="button"
-                  className="btn btn--ghost"
-                  onClick={() => setActiveTab('cabowner')}
-                >
-                  Enter as Cab Owner
-                </button>
+      <div className="lp">
+        {/* Hero Section */}
+        <section className="lp-hero">
+          <div className="container lp-hero__inner">
+            <span className="badge badge--fill lp-hero__badge">
+              Airport Ride Offers Platform &bull; Problem 2
+            </span>
+            <h1 className="lp-hero__title">
+              Seamless Airport Transfers with Transparent Pricing
+            </h1>
+            <p className="lp-hero__text">
+              Travelers post their trip with a price; eligible taxi suppliers assign a car and a quote.
+              Compare, book, and receive a 10-digit booking number &mdash; all with zero hidden fees.
+            </p>
+            <div className="lp-hero__actions">
+              <a
+                href="http://localhost:5174/"
+                className="btn btn--solid"
+              >
+                Enter as Traveler &rarr;
+              </a>
+              <a
+                href="http://localhost:5175/"
+                className="btn btn--ghost"
+              >
+                Enter as Cab Owner &rarr;
+              </a>
+            </div>
+          </div>
+        </section>
+
+        {/* Role Cards Section */}
+        <section className="container lp-roles">
+          <div className="lp-roles__grid">
+            {/* Traveler Card: Links directly to the separate Traveler module */}
+            <article className="card lp-card">
+              <div className="lp-card__top">
+                <span className="badge">Traveler Role</span>
+                <span className="lp-icon">&#128100;</span>
               </div>
-            </div>
-          </section>
+              <h2 className="lp-card__title">Traveler Portal</h2>
+              <p className="lp-card__sub">Family &amp; Business Airport Transfers (Menon Family Demo)</p>
+              <FeatureList items={travelerFeatures} />
+              <a
+                href="http://localhost:5174/"
+                className="btn btn--solid lp-card__cta"
+              >
+                Open Traveler Portal &rarr;
+              </a>
+            </article>
 
-          {/* Role Cards Section */}
-          <section className="container lp-roles">
-            <div className="lp-roles__grid">
-              {/* Traveler Card: Links directly to the separate Traveler module */}
-              <article className="card lp-card">
-                <div className="lp-card__top">
-                  <span className="badge">Traveler Role</span>
-                  <span className="lp-icon">&#128100;</span>
-                </div>
-                <h2 className="lp-card__title">Traveler Portal</h2>
-                <p className="lp-card__sub">Family &amp; Business Airport Transfers (Menon Family Demo)</p>
-                <FeatureList items={travelerFeatures} />
-                <a
-                  href="http://localhost:5174/"
-                  className="btn btn--solid lp-card__cta"
-                >
-                  Open Traveler Portal &rarr;
-                </a>
-              </article>
-
-              {/* Cab Owner Card */}
-              <article className="card lp-card">
-                <div className="lp-card__top">
-                  <span className="badge">Supplier Role</span>
-                  <span className="lp-icon">&#128661;</span>
-                </div>
-                <h2 className="lp-card__title">Cabowner Portal</h2>
-                <p className="lp-card__sub">Taxi Fleet Management &amp; Dispatch (Sakura Cabs Tokyo)</p>
-                <FeatureList items={supplierFeatures} />
-                <button
-                  type="button"
-                  className="btn btn--solid lp-card__cta"
-                  onClick={() => setActiveTab('cabowner')}
-                >
-                  Go to Cabowner Dashboard
-                </button>
-              </article>
-            </div>
-          </section>
-
-          {/* Hackathon Rules Section */}
-          <section className="lp-rules">
-            <div className="container">
-              <h2 className="lp-rules__head">System Rules Enforced for Every Ride</h2>
-              <div className="lp-rules__grid">
-                {rules.map((r) => (
-                  <article className="card lp-rule" key={r.code}>
-                    <span className="lp-rule__code">{r.code}</span>
-                    <h3 className="lp-rule__title">{r.title}</h3>
-                    <p className="lp-rule__text">{r.text}</p>
-                  </article>
-                ))}
+            {/* Cab Owner Card: Links to the separate Cab Owner module */}
+            <article className="card lp-card">
+              <div className="lp-card__top">
+                <span className="badge">Supplier Role</span>
+                <span className="lp-icon">&#128661;</span>
               </div>
+              <h2 className="lp-card__title">Cabowner Portal</h2>
+              <p className="lp-card__sub">Taxi Fleet Management &amp; Dispatch (Sakura Cabs Tokyo)</p>
+              <FeatureList items={supplierFeatures} />
+              <a
+                href="http://localhost:5175/"
+                className="btn btn--solid lp-card__cta"
+              >
+                Open Cabowner Portal &rarr;
+              </a>
+            </article>
+          </div>
+        </section>
+
+        {/* Hackathon Rules Section */}
+        <section className="lp-rules">
+          <div className="container">
+            <h2 className="lp-rules__head">System Rules Enforced for Every Ride</h2>
+            <div className="lp-rules__grid">
+              {rules.map((r) => (
+                <article className="card lp-rule" key={r.code}>
+                  <span className="lp-rule__code">{r.code}</span>
+                  <h3 className="lp-rule__title">{r.title}</h3>
+                  <p className="lp-rule__text">{r.text}</p>
+                </article>
+              ))}
             </div>
-          </section>
-        </div>
-      ) : (
-        <CabownerDashboard onNavigate={setActiveTab} />
-      )}
+          </div>
+        </section>
+      </div>
     </div>
   );
 }

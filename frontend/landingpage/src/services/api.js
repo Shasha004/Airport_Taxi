@@ -1,157 +1,212 @@
 /**
- * API Service layer for Airport Taxi (Problem 2).
- * Provides catalog data (airports, flights, hotels, routes)
- * and state management for ride requests & supplier dispatches.
+ * API Service layer for Traveler Portal.
+ * Connects directly to the Express backend running on http://localhost:5000/api
+ * (forwarded via Vite proxy '/api') with full catalog and ride-request endpoints.
  */
 
-const airports = [
+const API_BASE = '/api';
+
+// Fallback mock catalogs if backend is unreachable
+const fallbackAirports = [
   { id: 'NRT', name: 'Narita International Airport', city: 'Tokyo', serves_cities: ['Tokyo', 'Yokohama'] },
   { id: 'HND', name: 'Haneda Airport', city: 'Tokyo', serves_cities: ['Tokyo', 'Yokohama', 'Kawasaki'] }
 ];
 
-const flights = [
+const fallbackFlights = [
   { id: 'FL-401', flight_number: 'FL-401', airline: 'Air India', from: 'BLR', to: 'NRT', arrival_local: '2027-04-10T10:30:00' },
   { id: 'FL-220', flight_number: 'FL-220', airline: 'ANA', from: 'SIN', to: 'HND', arrival_local: '2027-04-11T14:05:00' },
   { id: 'FL-777', flight_number: 'FL-777', airline: 'JAL', from: 'LHR', to: 'NRT', arrival_local: '2027-04-12T09:15:00' }
 ];
 
-const hotels = [
+const fallbackHotels = [
   { id: 'HTL-TYO-004', name: 'Ueno Garden Inn', city: 'Tokyo', area: 'Ueno', rating: 4.2 },
   { id: 'HTL-TYO-010', name: 'Shinjuku Sky Hotel', city: 'Tokyo', area: 'Shinjuku', rating: 4.5 },
   { id: 'HTL-TYO-022', name: 'Ginza Pearl Suites', city: 'Tokyo', area: 'Ginza', rating: 4.7 }
 ];
 
-const routes = [
-  { airport: 'NRT', city: 'Tokyo', area: 'Ueno', distance_km: 73.3, drive_minutes: 90, price_min_inr: 10200, price_max_inr: 16800 },
-  { airport: 'NRT', city: 'Tokyo', area: 'Shinjuku', distance_km: 85.0, drive_minutes: 100, price_min_inr: 11500, price_max_inr: 18200 },
-  { airport: 'HND', city: 'Tokyo', area: 'Ginza', distance_km: 18.5, drive_minutes: 35, price_min_inr: 3200, price_max_inr: 5600 }
-];
-
-// Initial ride request matching the Menon Family scenario from the problem statement
-let rideRequests = [
-  {
-    id: 'REQ-1001',
-    travelerName: 'Menon family',
-    flightId: 'FL-401',
-    hotelId: 'HTL-TYO-004',
-    adults: 2,
-    childAges: [6],
-    largeBags: 3,
-    smallBags: 2,
-    pickupTime: '2027-04-10T11:30:00',
-    travelerPrice: 12000,
-    carType: 'SEDAN',
-    status: 'OPEN',
-    assignedSupplier: null,
-    assignedCar: null,
-    bookingCode: null
+/**
+ * Fetch Flights Catalog
+ */
+export async function getFlights() {
+  try {
+    const res = await fetch(`${API_BASE}/catalog/flights`);
+    if (res.ok) {
+      const json = await res.json();
+      const list = json.data || json;
+      return list.map((f) => ({
+        id: f.flight_id || f.id,
+        flight_number: f.flight_number || f.flightNumber,
+        airline: f.airline,
+        from: f.from,
+        to: f.to,
+        arrival_local: f.arrival_local || f.arrivalLocal
+      }));
+    }
+  } catch (err) {
+    console.warn('[API] Could not fetch flights from backend, using fallback:', err.message);
   }
-];
-
-function delay(data, ms = 150) {
-  return new Promise((resolve) => setTimeout(() => resolve(data), ms));
+  return fallbackFlights;
 }
 
-function findFlight(id) {
-  return flights.find((f) => f.id === id);
+/**
+ * Fetch Hotels Catalog
+ */
+export async function getHotels() {
+  try {
+    const res = await fetch(`${API_BASE}/catalog/hotels`);
+    if (res.ok) {
+      const json = await res.json();
+      const list = json.data || json;
+      return list.map((h) => ({
+        id: h.hotel_id || h.id,
+        name: h.name,
+        city: h.city,
+        area: h.area,
+        rating: h.rating || 4.2
+      }));
+    }
+  } catch (err) {
+    console.warn('[API] Could not fetch hotels from backend, using fallback:', err.message);
+  }
+  return fallbackHotels;
 }
 
-function findHotel(id) {
-  return hotels.find((h) => h.id === id);
+/**
+ * Fetch Airports Catalog
+ */
+export async function getAirports() {
+  try {
+    const res = await fetch(`${API_BASE}/catalog/airports`);
+    if (res.ok) {
+      const json = await res.json();
+      return json.data || json;
+    }
+  } catch (err) {
+    console.warn('[API] Could not fetch airports from backend, using fallback:', err.message);
+  }
+  return fallbackAirports;
 }
 
-function enrich(req) {
-  const flight = findFlight(req.flightId);
-  const hotel = findHotel(req.hotelId);
-  const route = routes.find((r) => r.airport === flight?.to && r.area === hotel?.area) || {
+/**
+ * Fetch Route Distance, Drive Time, and Allowed Price Range (Rule R3)
+ */
+export async function getPriceRange(flightId, hotelId) {
+  try {
+    const res = await fetch(`${API_BASE}/routes/price-range?flightId=${encodeURIComponent(flightId)}&hotelId=${encodeURIComponent(hotelId)}`);
+    if (res.ok) {
+      const json = await res.json();
+      const data = json.data || json;
+      const distance = data.distance_km ?? data.distanceKm ?? data.route?.distance_km ?? 73.3;
+      const driveMins = data.drive_minutes ?? data.driveMinutes ?? data.route?.drive_minutes ?? 90;
+      const minP = data.price_min_inr ?? data.priceMinInr ?? data.minPrice ?? 10200;
+      const maxP = data.price_max_inr ?? data.priceMaxInr ?? data.maxPrice ?? 16800;
+
+      return {
+        ok: true,
+        distance_km: distance,
+        drive_minutes: driveMins,
+        price_min_inr: minP,
+        price_max_inr: maxP
+      };
+    } else {
+      const errJson = await res.json().catch(() => ({}));
+      return { ok: false, error: errJson.error || 'Route not found or incompatible.' };
+    }
+  } catch (err) {
+    console.warn('[API] Could not fetch price range from backend:', err.message);
+  }
+
+  // Fallback for Narita to Ueno
+  return {
+    ok: true,
     distance_km: 73.3,
     drive_minutes: 90,
     price_min_inr: 10200,
     price_max_inr: 16800
   };
-  return { ...req, flight, hotel, route };
 }
 
-export async function getFlights() {
-  return delay(flights);
-}
-
-export async function getHotels() {
-  return delay(hotels);
-}
-
-export async function getAirports() {
-  return delay(airports);
-}
-
-export async function getPriceRange(flightId, hotelId) {
-  const flight = findFlight(flightId);
-  const hotel = findHotel(hotelId);
-  if (!flight || !hotel) {
-    return { ok: false, error: 'Flight or hotel not found (Rule R1).' };
-  }
-  const airport = airports.find((a) => a.id === flight.to);
-  const serves = airport?.serves_cities.includes(hotel.city);
-  if (!serves) {
-    return { ok: false, error: `Airport ${flight.to} does not serve ${hotel.city}.`, rule: 'R1' };
-  }
-  const route = routes.find((r) => r.airport === flight.to && r.area === hotel.area);
-  if (!route) {
-    return { ok: false, error: `No route defined for ${flight.to} -> ${hotel.area}.`, rule: 'R1' };
-  }
-  return delay({ ok: true, ...route });
-}
-
+/**
+ * Fetch All Ride Requests from Backend
+ */
 export async function getRideRequests() {
-  return delay(rideRequests.map(enrich));
+  try {
+    const res = await fetch(`${API_BASE}/ride-requests`);
+    if (res.ok) {
+      const json = await res.json();
+      const list = json.data || json;
+      return list.map((r) => ({
+        id: r.id || r.requestId,
+        travelerName: r.travelerName || r.traveler_name || 'Traveler',
+        flightId: r.flightId || r.flight_id,
+        hotelId: r.hotelId || r.hotel_id,
+        adults: r.adults,
+        childAges: r.childAges || r.child_ages || [],
+        largeBags: r.largeBags ?? r.large_bags ?? 0,
+        smallBags: r.smallBags ?? r.small_bags ?? 0,
+        pickupTime: r.pickupTime || r.pickupAt || r.pickup_at,
+        travelerPrice: r.travelerPrice ?? r.traveler_price ?? 0,
+        carType: r.carType || r.car_type || 'SEDAN',
+        status: (r.status || 'OPEN').toUpperCase(),
+        bookingCode: r.bookingCode || r.booking_code,
+        flight: r.flight ? {
+          flight_number: r.flight.flight_number || r.flight.flightNumber,
+          airline: r.flight.airline,
+          from: r.flight.from,
+          to: r.flight.to,
+          arrival_local: r.flight.arrival_local || r.flight.arrivalLocal
+        } : null,
+        hotel: r.hotel ? {
+          name: r.hotel.name,
+          city: r.hotel.city,
+          area: r.hotel.area
+        } : null,
+        route: r.route ? {
+          distance_km: r.route.distance_km || r.route.distanceKm,
+          drive_minutes: r.route.drive_minutes || r.route.driveMinutes,
+          price_min_inr: r.route.price_min_inr || r.route.priceMinInr,
+          price_max_inr: r.route.price_max_inr || r.route.priceMaxInr
+        } : null
+      }));
+    }
+  } catch (err) {
+    console.warn('[API] Could not fetch ride requests from backend:', err.message);
+  }
+
+  return [];
 }
 
+/**
+ * Submit New Ride Request to Backend POST /api/ride-requests
+ */
 export async function createRideRequest(payload) {
-  const flight = findFlight(payload.flightId);
-  const hotel = findHotel(payload.hotelId);
-  if (!flight || !hotel) return delay({ ok: false, error: 'Invalid flight or hotel.' });
+  try {
+    const res = await fetch(`${API_BASE}/ride-requests`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        travelerName: payload.travelerName,
+        flightId: payload.flightId,
+        hotelId: payload.hotelId,
+        adults: Number(payload.adults),
+        childAges: payload.childAges || [],
+        largeBags: Number(payload.largeBags || 0),
+        smallBags: Number(payload.smallBags || 0),
+        pickupTime: payload.pickupTime,
+        travelerPrice: Number(payload.travelerPrice),
+        carType: payload.carType || 'SEDAN'
+      })
+    });
 
-  const airport = airports.find((a) => a.id === flight.to);
-  if (!airport?.serves_cities.includes(hotel.city)) {
-    return delay({ ok: false, error: `Airport ${flight.to} does not serve ${hotel.city}.`, rule: 'R1' });
+    const json = await res.json();
+    if (res.ok && json.success !== false) {
+      return { ok: true, request: json.data };
+    } else {
+      return { ok: false, error: json.error || (json.errors && json.errors.join(', ')) || 'Failed to create ride request.' };
+    }
+  } catch (err) {
+    return { ok: false, error: `Backend connection error: ${err.message}` };
   }
-  if ((payload.adults || 0) < 1) return delay({ ok: false, error: 'At least 1 adult required.', rule: 'R1' });
-
-  const landsAt = new Date(flight.arrival_local).getTime();
-  const pickup = new Date(payload.pickupTime).getTime();
-  if (pickup - landsAt < 60 * 60 * 1000) {
-    return delay({ ok: false, error: 'Pickup must be at least 60 minutes after landing (Rule R2).', rule: 'R2' });
-  }
-
-  const route = routes.find((r) => r.airport === flight.to && r.area === hotel.area);
-  if (route && (payload.travelerPrice < route.price_min_inr || payload.travelerPrice > route.price_max_inr)) {
-    return delay({ ok: false, error: `Price must be between ₹${route.price_min_inr} and ₹${route.price_max_inr} (Rule R3).`, rule: 'R3' });
-  }
-
-  const id = 'REQ-' + String(1000 + rideRequests.length + 1);
-  const saved = { id, ...payload, status: 'OPEN' };
-  rideRequests.unshift(saved);
-  return delay({ ok: true, request: enrich(saved) });
 }
-
-export async function dispatchRideRequest(requestId, supplierName, vehicleName, agreedPrice) {
-  const idx = rideRequests.findIndex((r) => r.id === requestId);
-  if (idx === -1) return delay({ ok: false, error: 'Request not found.' });
-
-  // Generate 10-digit booking number (Rule R8)
-  const bookingCode = Math.floor(1000000000 + Math.random() * 9000000000).toString();
-
-  rideRequests[idx] = {
-    ...rideRequests[idx],
-    status: 'CONFIRMED',
-    assignedSupplier: supplierName,
-    assignedCar: vehicleName,
-    travelerPrice: agreedPrice,
-    bookingCode: bookingCode
-  };
-
-  return delay({ ok: true, request: enrich(rideRequests[idx]) });
-}
-
-export { findFlight, findHotel, airports };
-
