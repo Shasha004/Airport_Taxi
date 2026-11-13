@@ -1,0 +1,99 @@
+/* ==========================================================================
+   NAVBAR COMPONENT STYLES - CAB OWNER PORTAL
+   ========================================================================== */
+
+.navbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--white);
+  border-bottom: 2px solid var(--line);
+  box-shadow: 0 3px 0 var(--line);
+}
+
+.navbar__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  height: 68px;
+}
+
+.navbar__brand {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  cursor: pointer;
+  user-select: none;
+  text-decoration: none;
+  color: var(--black);
+}
+
+.navbar__logo {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  background: var(--black);
+  color: var(--white);
+  border-radius: 8px;
+  font-weight: 800;
+  font-size: 0.95rem;
+  letter-spacing: -0.02em;
+}
+
+.navbar__title {
+  font-size: 1.15rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--black);
+}
+
+.navbar__sub {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+
+.navbar__links {
+  display: flex;
+  gap: 24px;
+}
+
+.navbar__link {
+  font-weight: 700;
+  font-size: 0.92rem;
+  padding: 6px 0;
+  border: none;
+  background: transparent;
+  color: var(--black);
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  transition: border-bottom-color 0.15s ease, color 0.15s ease;
+  font-family: inherit;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+}
+
+.navbar__link:hover {
+  border-bottom-color: var(--line);
+}
+
+.navbar__link--active {
+  border-bottom-color: var(--line) !important;
+}
+
+.navbar__cta {
+  padding: 9px 18px;
+  font-size: 0.88rem;
+  border-radius: 8px;
+}
+
+@media (max-width: 768px) {
+  .navbar__links {
+    display: none;
+  }
+}
