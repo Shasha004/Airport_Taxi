@@ -26,7 +26,7 @@ export default function CreateRidePage() {
 
   // Form state - pre-fill traveler name from localStorage identity
   const storedTravelerName = localStorage.getItem('airportTaxi_travelerName') || '';
-  const [travelerName, setTravelerName] = useState(storedTravelerName || 'Menon family');
+  const [travelerName, setTravelerName] = useState(storedTravelerName || '');
   const [flightId, setFlightId] = useState('');
   const [hotelId, setHotelId] = useState('');
   const [adults, setAdults] = useState(2);
@@ -140,7 +140,7 @@ export default function CreateRidePage() {
 
   // Demo presets
   const applyMenonDemo = () => {
-    setTravelerName('Menon family');
+    // Keep the logged-in traveler's name; only reset flight/hotel/etc.
     setFlightId('FL-401');
     setHotelId('HTL-TYO-004');
     setAdults(2);
