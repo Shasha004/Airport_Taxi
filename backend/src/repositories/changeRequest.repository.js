@@ -18,10 +18,14 @@ function formatChangeRequest(row) {
     created_at: row.created_at,
     // Joined booking metadata if present
     bookingNumber: row.booking_number,
+    requestId: row.request_id,
     supplierId: row.supplier_id,
     carId: row.car_id,
     currentFlightId: row.current_flight_id,
     currentPickupAt: row.current_pickup_at,
+    hotelId: row.hotel_id,
+    price: row.price,
+    travelerName: row.traveler_name || 'Traveler',
   };
 }
 
@@ -47,9 +51,10 @@ class ChangeRequestRepository {
   findById(id) {
     const db = getDatabase();
     const stmt = db.prepare(`
-      SELECT cr.*, b.booking_number, b.supplier_id, b.car_id, b.flight_id AS current_flight_id, b.pickup_at AS current_pickup_at
+      SELECT cr.*, b.booking_number, b.request_id, b.supplier_id, b.car_id, b.flight_id AS current_flight_id, b.pickup_at AS current_pickup_at, b.hotel_id, b.price, r.traveler_name
       FROM change_requests cr
       JOIN bookings b ON cr.booking_id = b.id
+      LEFT JOIN ride_requests r ON b.request_id = r.id
       WHERE cr.id = ?
     `);
     const row = stmt.get(id);
@@ -59,9 +64,10 @@ class ChangeRequestRepository {
   findByBookingId(bookingId) {
     const db = getDatabase();
     const stmt = db.prepare(`
-      SELECT cr.*, b.booking_number, b.supplier_id, b.car_id, b.flight_id AS current_flight_id, b.pickup_at AS current_pickup_at
+      SELECT cr.*, b.booking_number, b.request_id, b.supplier_id, b.car_id, b.flight_id AS current_flight_id, b.pickup_at AS current_pickup_at, b.hotel_id, b.price, r.traveler_name
       FROM change_requests cr
       JOIN bookings b ON cr.booking_id = b.id
+      LEFT JOIN ride_requests r ON b.request_id = r.id
       WHERE cr.booking_id = ?
       ORDER BY cr.created_at DESC
     `);
@@ -72,9 +78,10 @@ class ChangeRequestRepository {
   findBySupplierId(supplierId) {
     const db = getDatabase();
     const stmt = db.prepare(`
-      SELECT cr.*, b.booking_number, b.supplier_id, b.car_id, b.flight_id AS current_flight_id, b.pickup_at AS current_pickup_at
+      SELECT cr.*, b.booking_number, b.request_id, b.supplier_id, b.car_id, b.flight_id AS current_flight_id, b.pickup_at AS current_pickup_at, b.hotel_id, b.price, r.traveler_name
       FROM change_requests cr
       JOIN bookings b ON cr.booking_id = b.id
+      LEFT JOIN ride_requests r ON b.request_id = r.id
       WHERE b.supplier_id = ?
       ORDER BY cr.created_at DESC
     `);
@@ -93,23 +100,67 @@ class ChangeRequestRepository {
     return this.findById(id);
   }
 
+  rejectChangeTransaction(changeRequestId, bookingId, supplierResponse) {
+    const db = getDatabase();
+
+    const transaction = db.transaction(() => {
+      // 1. Mark change request as rejected
+      db.prepare(`
+        UPDATE change_requests
+        SET status = 'rejected', supplier_response = ?
+        WHERE id = ?
+      `).run(supplierResponse || 'Rejected by supplier due to schedule conflict', changeRequestId);
+
+      // 2. Cancel the booking because the delayed schedule cannot be accommodated
+      db.prepare(`
+        UPDATE bookings
+        SET status = 'cancelled'
+        WHERE id = ?
+      `).run(bookingId);
+
+      // 3. Update the associated ride request to 'cancelled' so it no longer shows as 'booked'
+      db.prepare(`
+        UPDATE ride_requests
+        SET status = 'cancelled'
+        WHERE id = (SELECT request_id FROM bookings WHERE id = ?)
+      `).run(bookingId);
+
+      // 4. Update the booked offer to 'cancelled'
+      db.prepare(`
+        UPDATE offers
+        SET status = 'cancelled'
+        WHERE id = (SELECT offer_id FROM bookings WHERE id = ?)
+      `).run(bookingId);
+    });
+
+    transaction();
+    return this.findById(changeRequestId);
+  }
+
   acceptChangeTransaction(changeRequestId, bookingId, targetFlightId, targetPickupAt, supplierResponse) {
     const db = getDatabase();
 
     const transaction = db.transaction(() => {
-      // 1. Update booking with new flight and pickup
+      // 1. Update booking with new flight and pickup (previous schedule replaced)
       db.prepare(`
         UPDATE bookings
         SET flight_id = ?, pickup_at = ?
         WHERE id = ?
       `).run(targetFlightId, targetPickupAt, bookingId);
 
-      // 2. Update change request to accepted
+      // 2. Also update associated ride_request with new flight and pickup (previous schedule deleted/replaced)
+      db.prepare(`
+        UPDATE ride_requests
+        SET flight_id = ?, pickup_at = ?
+        WHERE id = (SELECT request_id FROM bookings WHERE id = ?)
+      `).run(targetFlightId, targetPickupAt, bookingId);
+
+      // 3. Update change request to accepted
       db.prepare(`
         UPDATE change_requests
         SET status = 'accepted', supplier_response = ?
         WHERE id = ?
-      `).run(supplierResponse || 'Accepted by supplier', changeRequestId);
+      `).run(supplierResponse || 'Accepted by supplier (Previous schedule replaced with current delayed schedule)', changeRequestId);
     });
 
     transaction();

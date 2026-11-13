@@ -210,3 +210,26 @@ export async function createRideRequest(payload) {
     return { ok: false, error: `Backend connection error: ${err.message}` };
   }
 }
+
+/**
+ * Report Flight Delay for a ride request
+ */
+export async function reportFlightDelay(requestId, payload) {
+  try {
+    const res = await fetch(`${API_BASE}/ride-requests/${requestId}/delay`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(payload)
+    });
+    const json = await res.json();
+    if (res.ok && json.success !== false) {
+      return { ok: true, data: json };
+    } else {
+      return { ok: false, error: json.error || 'Failed to report flight delay' };
+    }
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+}

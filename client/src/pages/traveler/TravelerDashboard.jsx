@@ -14,6 +14,10 @@ import {
   CheckCircle,
   Search,
   Car,
+  Edit3,
+  X,
+  Info,
+  Calendar,
 } from 'lucide-react';
 import { rideRequestApi } from '../../api/api';
 
@@ -23,6 +27,15 @@ export default function TravelerDashboard() {
   const [error, setError] = useState(null);
   const [filter, setFilter] = useState('all'); // 'all' or 'open'
   const [searchTerm, setSearchTerm] = useState('');
+
+  // Flight Delay Modal state
+  const [delayModalReq, setDelayModalReq] = useState(null);
+  const [delayMinutes, setDelayMinutes] = useState(45);
+  const [customPickup, setCustomPickup] = useState('');
+  const [delayReason, setDelayReason] = useState('Inbound flight delayed');
+  const [submittingDelay, setSubmittingDelay] = useState(false);
+  const [delayModalError, setDelayModalError] = useState(null);
+  const [delayModalSuccess, setDelayModalSuccess] = useState(null);
 
   const fetchRequests = async () => {
     setLoading(true);
@@ -57,6 +70,78 @@ export default function TravelerDashboard() {
       });
     } catch (e) {
       return dateStr;
+    }
+  };
+
+  // Helper to compute ISO string offset by minutes from a base ISO
+  const computeDelayedTime = (baseIso, minutes) => {
+    if (!baseIso) return '';
+    try {
+      const ms = new Date(baseIso.endsWith('Z') ? baseIso : baseIso + 'Z').getTime();
+      const newMs = ms + Number(minutes) * 60 * 1000;
+      const d = new Date(newMs);
+      return d.toISOString().slice(0, 16);
+    } catch (e) {
+      return baseIso.slice(0, 16);
+    }
+  };
+
+  const openDelayModal = (req) => {
+    setDelayModalReq(req);
+    setDelayMinutes(45);
+    setDelayReason('Flight delayed due to weather / air traffic');
+    setDelayModalError(null);
+    setDelayModalSuccess(null);
+
+    const basePickup = req.pickupTime || req.pickupAt;
+    const computed = computeDelayedTime(basePickup, 45);
+    setCustomPickup(computed);
+  };
+
+  const closeDelayModal = () => {
+    setDelayModalReq(null);
+    setDelayModalError(null);
+    setDelayModalSuccess(null);
+  };
+
+  const handlePresetDelay = (mins) => {
+    setDelayMinutes(mins);
+    if (delayModalReq) {
+      const basePickup = delayModalReq.pickupTime || delayModalReq.pickupAt;
+      setCustomPickup(computeDelayedTime(basePickup, mins));
+    }
+  };
+
+  const handleSubmitDelay = async (e) => {
+    e.preventDefault();
+    if (!delayModalReq) return;
+
+    setSubmittingDelay(true);
+    setDelayModalError(null);
+    setDelayModalSuccess(null);
+
+    try {
+      const pickupFormatted = customPickup.includes(':00', 14) ? customPickup : `${customPickup}:00`;
+      const res = await rideRequestApi.reportFlightDelay(delayModalReq.id, {
+        delayMinutes,
+        newPickupAt: pickupFormatted,
+        reason: delayReason,
+      });
+
+      setDelayModalSuccess(
+        res.isBooked
+          ? 'Flight delay submitted! Your assigned supplier has been notified with the option to accept or reject.'
+          : 'Flight delay recorded! Pickup time has been updated successfully.'
+      );
+
+      setTimeout(() => {
+        closeDelayModal();
+        fetchRequests();
+      }, 1800);
+    } catch (err) {
+      setDelayModalError(err.response?.data?.error || err.message || 'Failed to submit flight delay');
+    } finally {
+      setSubmittingDelay(false);
     }
   };
 
@@ -275,6 +360,53 @@ export default function TravelerDashboard() {
                   )}
                 </div>
 
+                {req.booking && (
+                  req.status === 'cancelled' || req.booking?.status === 'cancelled' ? (
+                    <div className="booking-cancelled-pill" style={{ margin: '0.5rem 0 0.75rem', width: 'fit-content' }}>
+                      <XCircle size={14} />
+                      <span>BOOKING #{req.booking.bookingNumber} (CANCELLED)</span>
+                    </div>
+                  ) : (
+                    <div className="booking-confirmed-pill" style={{ margin: '0.5rem 0 0.75rem', width: 'fit-content' }}>
+                      <CheckCircle size={14} />
+                      <span>BOOKING #{req.booking.bookingNumber}</span>
+                      {req.booking.supplier && (
+                        <span style={{ marginLeft: '0.4rem', color: 'var(--gray-600)' }}>
+                          • {req.booking.supplier.name} ({req.booking.carId})
+                        </span>
+                      )}
+                    </div>
+                  )
+                )}
+
+                {req.pendingChangeRequest && (
+                  <div className="delay-alert-banner">
+                    <AlertCircle size={16} style={{ flexShrink: 0 }} />
+                    <div>
+                      <strong>Flight Delay Update Pending:</strong> Requested new pickup at{' '}
+                      <strong>{formatDate(req.pendingChangeRequest.newPickupAt)}</strong>.
+                      Waiting for supplier to accept or reject.
+                    </div>
+                  </div>
+                )}
+
+                {req.changeRequests?.length > 0 && !req.pendingChangeRequest && (
+                  <>
+                    {req.changeRequests[0].status === 'accepted' && (
+                      <div className="delay-success-banner">
+                        <CheckCircle size={16} style={{ flexShrink: 0 }} />
+                        <span>Supplier accepted delayed schedule. Previous schedule replaced with current.</span>
+                      </div>
+                    )}
+                    {req.changeRequests[0].status === 'rejected' && (
+                      <div className="delay-rejected-banner">
+                        <AlertCircle size={16} style={{ flexShrink: 0 }} />
+                        <span>Supplier rejected delay: "{req.changeRequests[0].supplierResponse || 'Rejected'}". Booking has been cancelled.</span>
+                      </div>
+                    )}
+                  </>
+                )}
+
                 <div className="request-card-footer">
                   <div className="price-tag-block">
                     <span className="price-label">Proposed Price:</span>
@@ -292,18 +424,256 @@ export default function TravelerDashboard() {
                   )}
                 </div>
 
-                <div className="card-action-bar">
-                  <Link
-                    to={`/traveler/offers/${req.id}`}
-                    className="btn-primary w-full"
-                  >
-                    <span>View Supplier Offers</span>
-                    <Car size={16} />
-                  </Link>
+                <div className="card-action-bar" style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                  {req.status === 'cancelled' || req.booking?.status === 'cancelled' ? (
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      width: '100%',
+                      padding: '0.65rem 0.85rem',
+                      background: '#fef2f2',
+                      border: '1.5px solid #dc2626',
+                      borderRadius: '8px',
+                      color: '#991b1b',
+                      fontSize: '0.82rem',
+                      fontWeight: 600,
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <XCircle size={16} color="#dc2626" />
+                        <span>Booking Cancelled (Delayed flight schedule rejected by supplier)</span>
+                      </div>
+                      <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        {req.booking?.bookingNumber && (
+                          <Link
+                            to={`/traveler/booking/${req.booking.bookingNumber}`}
+                            className="btn-secondary"
+                            style={{ fontSize: '0.75rem', padding: '0.25rem 0.6rem' }}
+                          >
+                            Details
+                          </Link>
+                        )}
+                        <Link
+                          to="/traveler/create"
+                          className="btn-primary"
+                          style={{ fontSize: '0.75rem', padding: '0.25rem 0.6rem' }}
+                        >
+                          New Ride
+                        </Link>
+                      </div>
+                    </div>
+                  ) : req.hasBooking ? (
+                    <>
+                      <Link
+                        to={`/traveler/booking/${req.booking?.bookingNumber}`}
+                        className="btn-secondary"
+                        style={{ flex: 1, minWidth: '120px', justifyContent: 'center' }}
+                      >
+                        <CheckCircle size={16} />
+                        <span>#{req.booking?.bookingNumber}</span>
+                      </Link>
+                      <Link
+                        to={`/traveler/track/${req.booking?.bookingNumber}`}
+                        className="btn-secondary"
+                        style={{
+                          flex: 1,
+                          minWidth: '130px',
+                          justifyContent: 'center',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                          color: '#fff',
+                          border: 'none',
+                          fontWeight: 600,
+                        }}
+                        title="Live GPS route tracking from airport to hotel"
+                      >
+                        <Navigation size={16} />
+                        <span>Track Cab 🗺️</span>
+                      </Link>
+                      <button
+                        type="button"
+                        className="btn-primary"
+                        style={{ flex: 1, minWidth: '150px', justifyContent: 'center' }}
+                        onClick={() => openDelayModal(req)}
+                      >
+                        <Clock size={16} />
+                        <span>Flight Delayed? Edit</span>
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <Link
+                        to={`/traveler/offers/${req.id}`}
+                        className="btn-primary"
+                        style={{ flex: 1, justifyContent: 'center' }}
+                      >
+                        <span>View Offers</span>
+                        <Car size={16} />
+                      </Link>
+                      <button
+                        type="button"
+                        className="btn-secondary"
+                        style={{ flex: 1, justifyContent: 'center' }}
+                        onClick={() => openDelayModal(req)}
+                      >
+                        <Clock size={16} />
+                        <span>Flight Delayed? Edit</span>
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* Flight Delay Edit Modal */}
+      {delayModalReq && (
+        <div className="modal-overlay" onClick={closeDelayModal}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <div className="modal-title-row">
+                <Clock size={22} className="text-primary" />
+                <div>
+                  <h3 className="modal-title">Flight Delayed? Update Schedule</h3>
+                  <span style={{ fontSize: '0.8rem', color: 'var(--gray-600)' }}>
+                    Request #{delayModalReq.id} • {delayModalReq.travelerName}
+                  </span>
+                </div>
+              </div>
+              <button type="button" className="modal-close-btn" onClick={closeDelayModal}>
+                <X size={20} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmitDelay}>
+              <div className="modal-body">
+                {delayModalError && (
+                  <div className="alert-banner alert-error">
+                    <AlertCircle size={18} />
+                    <span>{delayModalError}</span>
+                  </div>
+                )}
+
+                {delayModalSuccess && (
+                  <div className="alert-banner alert-success">
+                    <CheckCircle size={18} />
+                    <span>{delayModalSuccess}</span>
+                  </div>
+                )}
+
+                <div className="delay-info-card">
+                  <div className="delay-info-row">
+                    <span className="lbl">Arrival Flight:</span>
+                    <span className="val">
+                      {delayModalReq.flight?.flight_number} ({delayModalReq.flight?.airline}) — Lands {delayModalReq.flight?.arrival_local}
+                    </span>
+                  </div>
+                  <div className="delay-info-row">
+                    <span className="lbl">Current Pickup Time:</span>
+                    <span className="val">{delayModalReq.pickupTime || delayModalReq.pickupAt}</span>
+                  </div>
+                  {delayModalReq.hasBooking && (
+                    <div className="delay-info-row">
+                      <span className="lbl">Assigned Supplier:</span>
+                      <span className="val">
+                        {delayModalReq.booking?.supplier?.name || delayModalReq.booking?.supplierId} (Car {delayModalReq.booking?.carId})
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                <div>
+                  <label className="quick-delay-label">
+                    <Clock size={16} />
+                    <span>Select Flight Delay Offset:</span>
+                  </label>
+                  <div className="delay-preset-buttons">
+                    {[15, 30, 45, 60, 120].map((mins) => (
+                      <button
+                        key={mins}
+                        type="button"
+                        className={`delay-btn ${delayMinutes === mins ? 'active' : ''}`}
+                        onClick={() => handlePresetDelay(mins)}
+                      >
+                        {mins >= 60 ? `+${mins / 60}h` : `+${mins}m`}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="customPickupInput">New Scheduled Pickup Time (Local):</label>
+                  <input
+                    id="customPickupInput"
+                    type="datetime-local"
+                    className="input-field"
+                    value={customPickup}
+                    onChange={(e) => setCustomPickup(e.target.value)}
+                    required
+                  />
+                  <span style={{ fontSize: '0.78rem', color: 'var(--gray-600)', marginTop: '0.25rem', display: 'block' }}>
+                    Rule R2: Pickup must be at least 60 minutes after flight landing ({delayModalReq.flight?.arrival_local}).
+                  </span>
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="delayReasonInput">Delay Reason / Notes for Supplier:</label>
+                  <input
+                    id="delayReasonInput"
+                    type="text"
+                    className="input-field"
+                    placeholder="e.g. Inbound flight delayed due to weather / ATC"
+                    value={delayReason}
+                    onChange={(e) => setDelayReason(e.target.value)}
+                  />
+                </div>
+
+                <div className="delay-notice-box">
+                  <Info size={20} style={{ flexShrink: 0 }} />
+                  <div>
+                    {delayModalReq.hasBooking ? (
+                      <span>
+                        <strong>Supplier Notification:</strong> Your assigned supplier{' '}
+                        (<em>{delayModalReq.booking?.supplier?.name}</em>) will receive this update with the option:
+                        <br />
+                        <strong>"Would you like to accept or reject?"</strong>
+                        <br />
+                        If accepted: previous schedule will be deleted and current delayed schedule accepted.
+                      </span>
+                    ) : (
+                      <span>
+                        <strong>Immediate Request Update:</strong> Your ride request pickup schedule will be updated directly.
+                        Suppliers reviewing your request will see the new delayed schedule.
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="modal-footer">
+                <button type="button" className="btn-secondary" onClick={closeDelayModal} disabled={submittingDelay}>
+                  Cancel
+                </button>
+                <button type="submit" className="btn-primary" disabled={submittingDelay}>
+                  {submittingDelay ? (
+                    <>
+                      <RefreshCw size={16} className="spin" />
+                      <span>Updating Schedule...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Clock size={16} />
+                      <span>Submit Flight Delay Update</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
     </div>

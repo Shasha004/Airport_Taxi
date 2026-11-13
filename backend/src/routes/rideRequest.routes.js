@@ -4,6 +4,8 @@ const rideRequestController = require('../controllers/rideRequest.controller');
 
 router.post('/', rideRequestController.createRideRequest);
 router.get('/:id', rideRequestController.getRideRequestById);
+router.patch('/:id', rideRequestController.updateRideRequest);
+router.post('/:id/delay', rideRequestController.reportFlightDelay);
 router.get('/', rideRequestController.getRideRequests);
 
 module.exports = router;

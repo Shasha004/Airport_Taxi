@@ -54,6 +54,14 @@ export const rideRequestApi = {
     const res = await api.get('/ride-requests', { params });
     return res.data;
   },
+  updateRideRequest: async (id, payload) => {
+    const res = await api.patch(`/ride-requests/${id}`, payload);
+    return res.data;
+  },
+  reportFlightDelay: async (id, payload) => {
+    const res = await api.post(`/ride-requests/${id}/delay`, payload);
+    return res.data;
+  },
 };
 
 export const supplierApi = {
@@ -96,6 +104,14 @@ export const changeRequestApi = {
   },
   getSupplierChangeRequests: async (supplierId) => {
     const res = await api.get(`/change-requests/supplier/${supplierId}`);
+    return res.data;
+  },
+  getBookingChangeRequests: async (bookingNumber) => {
+    const res = await api.get(`/change-requests/booking/${bookingNumber}`);
+    return res.data;
+  },
+  getRequestChangeRequests: async (requestId) => {
+    const res = await api.get(`/change-requests/request/${requestId}`);
     return res.data;
   },
   reviewChangeRequest: async (changeRequestId, payload) => {

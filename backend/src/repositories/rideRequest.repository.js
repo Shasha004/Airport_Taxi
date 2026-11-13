@@ -115,6 +115,47 @@ class RideRequestRepository {
   findOpenRequests() {
     return this.findAll({ status: 'open' });
   }
+
+  updateFlightAndPickup(id, flightId, pickupAt) {
+    const db = getDatabase();
+    const stmt = db.prepare(`
+      UPDATE ride_requests
+      SET flight_id = ?, pickup_at = ?
+      WHERE id = ?
+    `);
+    stmt.run(flightId, pickupAt, id);
+    return this.findById(id);
+  }
+
+  update(id, fields = {}) {
+    const db = getDatabase();
+    const setClauses = [];
+    const params = [];
+
+    if (fields.flightId || fields.flight_id) {
+      setClauses.push('flight_id = ?');
+      params.push(fields.flightId || fields.flight_id);
+    }
+    if (fields.pickupAt || fields.pickup_at || fields.pickupTime) {
+      setClauses.push('pickup_at = ?');
+      params.push(fields.pickupAt || fields.pickup_at || fields.pickupTime);
+    }
+    if (fields.status) {
+      setClauses.push('status = ?');
+      params.push(fields.status);
+    }
+    if (fields.travelerPrice || fields.traveler_price) {
+      setClauses.push('traveler_price = ?');
+      params.push(fields.travelerPrice || fields.traveler_price);
+    }
+
+    if (setClauses.length === 0) return this.findById(id);
+
+    params.push(id);
+    const query = `UPDATE ride_requests SET ${setClauses.join(', ')} WHERE id = ?`;
+    db.prepare(query).run(...params);
+    return this.findById(id);
+  }
 }
 
 module.exports = new RideRequestRepository();
