@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import {
   Car,
@@ -15,6 +15,10 @@ import {
   AlertCircle,
   Star,
   ShieldCheck,
+  SlidersHorizontal,
+  ArrowUpDown,
+  RotateCcw,
+  Sparkles,
 } from 'lucide-react';
 import { offerApi, rideRequestApi, bookingApi } from '../../api/api';
 
@@ -27,6 +31,12 @@ export default function OffersPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [actionLoading, setActionLoading] = useState(null);
+
+  // Filter and Sorting state (active when multiple offers exist)
+  const [selectedCarType, setSelectedCarType] = useState('ALL');
+  const [maxPrice, setMaxPrice] = useState(null);
+  const [sortBy, setSortBy] = useState('price-asc'); // 'price-asc', 'price-desc', 'rating-desc', 'default'
+  const [statusFilter, setStatusFilter] = useState('ALL');
 
   const loadData = async () => {
     setLoading(true);
@@ -75,6 +85,83 @@ export default function OffersPage() {
     } finally {
       setActionLoading(null);
     }
+  };
+
+  // Dynamic price bounds based on loaded offers
+  const priceBounds = useMemo(() => {
+    if (!offers || offers.length === 0) return { min: 0, max: 50000 };
+    const prices = offers.map((o) => Number(o.offerPrice) || 0);
+    return {
+      min: Math.min(...prices),
+      max: Math.max(...prices),
+    };
+  }, [offers]);
+
+  // Set default maxPrice to the actual max when offers are loaded
+  useEffect(() => {
+    if (offers.length > 0 && maxPrice === null) {
+      setMaxPrice(priceBounds.max);
+    }
+  }, [offers, priceBounds.max, maxPrice]);
+
+  // Available car types and their offer counts
+  const carTypeCounts = useMemo(() => {
+    const counts = {};
+    offers.forEach((o) => {
+      const type = (o.car?.type || 'SEDAN').toUpperCase();
+      counts[type] = (counts[type] || 0) + 1;
+    });
+    return counts;
+  }, [offers]);
+
+  const uniqueCarTypes = useMemo(() => {
+    return Object.keys(carTypeCounts).sort();
+  }, [carTypeCounts]);
+
+  // Filtered & sorted offers
+  const filteredOffers = useMemo(() => {
+    let result = [...offers];
+
+    // Filter by car type
+    if (selectedCarType !== 'ALL') {
+      result = result.filter(
+        (o) => (o.car?.type || 'SEDAN').toUpperCase() === selectedCarType
+      );
+    }
+
+    // Filter by max price budget
+    if (maxPrice !== null && maxPrice !== undefined) {
+      result = result.filter((o) => Number(o.offerPrice) <= maxPrice);
+    }
+
+    // Filter by status
+    if (statusFilter !== 'ALL') {
+      result = result.filter((o) => o.status === statusFilter);
+    }
+
+    // Sort offers
+    if (sortBy === 'price-asc') {
+      result.sort((a, b) => Number(a.offerPrice) - Number(b.offerPrice));
+    } else if (sortBy === 'price-desc') {
+      result.sort((a, b) => Number(b.offerPrice) - Number(a.offerPrice));
+    } else if (sortBy === 'rating-desc') {
+      result.sort((a, b) => (Number(b.supplier?.rating) || 0) - (Number(a.supplier?.rating) || 0));
+    }
+
+    return result;
+  }, [offers, selectedCarType, maxPrice, statusFilter, sortBy]);
+
+  const hasActiveFilters =
+    selectedCarType !== 'ALL' ||
+    (maxPrice !== null && maxPrice < priceBounds.max) ||
+    statusFilter !== 'ALL' ||
+    sortBy !== 'price-asc';
+
+  const handleResetFilters = () => {
+    setSelectedCarType('ALL');
+    setMaxPrice(priceBounds.max);
+    setSortBy('price-asc');
+    setStatusFilter('ALL');
   };
 
   if (loading && !request) {
@@ -153,6 +240,132 @@ export default function OffersPage() {
           <span className="info-tag">R8: Choose 1 offer to confirm or reject individually</span>
         </div>
 
+        {/* Filter and Sort Toolbar (Available when multiple offers exist) */}
+        {offers.length > 1 && (
+          <div className="offers-filter-card">
+            <div className="filter-card-header">
+              <div className="filter-title-wrap">
+                <SlidersHorizontal size={18} className="text-primary" />
+                <span className="filter-title">Filter & Compare Offers</span>
+                {hasActiveFilters && (
+                  <span className="active-filter-badge">Filters Active</span>
+                )}
+              </div>
+              <div className="filter-header-actions">
+                <span className="results-count-text">
+                  Showing <strong>{filteredOffers.length}</strong> of <strong>{offers.length}</strong> offers
+                </span>
+                {hasActiveFilters && (
+                  <button
+                    type="button"
+                    className="btn-reset-filters"
+                    onClick={handleResetFilters}
+                    title="Reset all filters"
+                  >
+                    <RotateCcw size={13} />
+                    <span>Reset</span>
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <div className="filter-controls-grid">
+              {/* Car Type Filter Pills */}
+              <div className="filter-group car-type-group">
+                <label className="filter-label">
+                  <Car size={15} />
+                  <span>Car Type</span>
+                </label>
+                <div className="car-type-pills">
+                  <button
+                    type="button"
+                    className={`filter-pill ${selectedCarType === 'ALL' ? 'active' : ''}`}
+                    onClick={() => setSelectedCarType('ALL')}
+                  >
+                    <span>All Types</span>
+                    <span className="pill-count">{offers.length}</span>
+                  </button>
+                  {uniqueCarTypes.map((type) => (
+                    <button
+                      key={type}
+                      type="button"
+                      className={`filter-pill ${selectedCarType === type ? 'active' : ''}`}
+                      onClick={() => setSelectedCarType(type)}
+                    >
+                      <span>{type}</span>
+                      <span className="pill-count">{carTypeCounts[type]}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Price Filter (Slider & Range) */}
+              <div className="filter-group price-filter-group">
+                <div className="filter-label-row">
+                  <label className="filter-label">
+                    <IndianRupee size={15} />
+                    <span>Max Price Budget</span>
+                  </label>
+                  <span className="price-slider-value">
+                    ≤ ₹{(maxPrice ?? priceBounds.max).toLocaleString()}
+                  </span>
+                </div>
+                <div className="price-slider-wrap">
+                  <input
+                    type="range"
+                    min={priceBounds.min}
+                    max={priceBounds.max}
+                    step={100}
+                    value={maxPrice ?? priceBounds.max}
+                    onChange={(e) => setMaxPrice(Number(e.target.value))}
+                    className="price-range-slider"
+                  />
+                  <div className="price-range-labels">
+                    <span>Min: ₹{priceBounds.min.toLocaleString()}</span>
+                    <span>Max: ₹{priceBounds.max.toLocaleString()}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Sort By Dropdown */}
+              <div className="filter-group sort-group">
+                <label className="filter-label">
+                  <ArrowUpDown size={15} />
+                  <span>Sort By</span>
+                </label>
+                <select
+                  className="filter-select"
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                >
+                  <option value="price-asc">Price: Low to High (Cheapest first)</option>
+                  <option value="price-desc">Price: High to Low</option>
+                  <option value="rating-desc">Supplier Rating: High to Low</option>
+                  <option value="default">Default Order</option>
+                </select>
+              </div>
+
+              {/* Status Filter */}
+              <div className="filter-group status-group">
+                <label className="filter-label">
+                  <ShieldCheck size={15} />
+                  <span>Offer Status</span>
+                </label>
+                <select
+                  className="filter-select"
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                >
+                  <option value="ALL">All Statuses ({offers.length})</option>
+                  <option value="assigned">Available to Book</option>
+                  <option value="booked">Booked</option>
+                  <option value="rejected">Rejected</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        )}
+
         {offers.length === 0 ? (
           <div className="empty-state">
             <Car size={48} className="empty-icon" />
@@ -168,9 +381,26 @@ export default function OffersPage() {
               </Link>
             </div>
           </div>
+        ) : filteredOffers.length === 0 ? (
+          <div className="empty-state filter-empty-state">
+            <SlidersHorizontal size={44} className="empty-icon" />
+            <h3>No Offers Match Selected Filters</h3>
+            <p>
+              No offers were found matching Car Type: <strong>{selectedCarType}</strong> and Max Price: <strong>≤ ₹{(maxPrice ?? priceBounds.max).toLocaleString()}</strong>.
+            </p>
+            <button
+              type="button"
+              className="btn-primary"
+              style={{ marginTop: '0.75rem' }}
+              onClick={handleResetFilters}
+            >
+              <RotateCcw size={16} />
+              <span>Reset All Filters</span>
+            </button>
+          </div>
         ) : (
           <div className="offers-grid">
-            {offers.map((offer) => {
+            {filteredOffers.map((offer) => {
               const isAssigned = offer.status === 'assigned';
               const isBooked = offer.status === 'booked';
               const isRejected = offer.status === 'rejected';

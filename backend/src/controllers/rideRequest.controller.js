@@ -63,7 +63,36 @@ class RideRequestController {
       next(err);
     }
   }
+
+  updateRideRequest(req, res, next) {
+    try {
+      const { id } = req.params;
+      const result = rideRequestService.updateRideRequest(id, req.body);
+      res.json({
+        success: true,
+        message: 'Ride request updated successfully',
+        data: result
+      });
+    } catch (err) {
+      res.status(err.statusCode || 400).json({
+        success: false,
+        error: err.message
+      });
+    }
+  }
+
+  reportFlightDelay(req, res, next) {
+    try {
+      const { id } = req.params;
+      const result = rideRequestService.reportFlightDelay(id, req.body);
+      res.json(result);
+    } catch (err) {
+      res.status(err.statusCode || 400).json({
+        success: false,
+        error: err.message
+      });
+    }
+  }
 }
 
 module.exports = new RideRequestController();
-

@@ -10,12 +10,12 @@ const SCENARIOS = [
     sub: 'FL-401 • Ueno Garden Inn • ₹12,000',
     data: {
       travelerName: 'Menon family',
+      largeBags: 3,
+      smallBags: 2,
       flightId: 'FL-401',
       hotelId: 'HTL-TYO-004',
       adults: 2,
       childAges: [6],
-      largeBags: 3,
-      smallBags: 2,
       pickupTime: '2027-04-10T11:30',
       travelerPrice: 12000,
       carType: 'SEDAN'

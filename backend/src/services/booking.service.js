@@ -133,6 +133,7 @@ class BookingService {
     const flight = catalogService.getFlightById(booking.flightId);
     const hotel = catalogService.getHotelById(booking.hotelId);
     const supplier = catalogService.getSupplierById(booking.supplierId);
+    const airport = flight ? catalogService.getAirportByCode(flight.to) : null;
     let car = null;
     if (supplier && Array.isArray(supplier.vehicles)) {
       car = supplier.vehicles.find(v => v.vehicle_id === booking.carId);
@@ -152,12 +153,21 @@ class BookingService {
         from: flight.from,
         to: flight.to,
         arrival_local: flight.arrival_local,
+        airport: airport ? {
+          code: airport.code,
+          name: airport.name,
+          city: airport.city,
+          lat: airport.lat,
+          lng: airport.lng,
+        } : null,
       } : null,
       hotel: hotel ? {
         hotel_id: hotel.hotel_id,
         name: hotel.name,
         city: hotel.city,
         area: hotel.area,
+        lat: hotel.lat,
+        lng: hotel.lng,
       } : null,
       supplier: supplier ? {
         company_id: supplier.company_id,

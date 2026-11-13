@@ -7,6 +7,7 @@ import CreateRidePage from './pages/traveler/CreateRidePage';
 import OffersPage from './pages/traveler/OffersPage';
 import BookingSummaryPage from './pages/traveler/BookingSummaryPage';
 import ChangeBookingPage from './pages/traveler/ChangeBookingPage';
+import LiveTrackingPage from './pages/traveler/LiveTrackingPage';
 
 import SupplierDashboard from './pages/supplier/SupplierDashboard';
 import SupplierRequestsPage from './pages/supplier/SupplierRequestsPage';
@@ -28,6 +29,7 @@ export default function App() {
           <Route path="/traveler/booking" element={<BookingSummaryPage />} />
           <Route path="/traveler/booking/:bookingNumber" element={<BookingSummaryPage />} />
           <Route path="/traveler/booking/:bookingNumber/change" element={<ChangeBookingPage />} />
+          <Route path="/traveler/track/:bookingNumber" element={<LiveTrackingPage />} />
 
           {/* Supplier Flow */}
           <Route path="/supplier" element={<SupplierDashboard />} />

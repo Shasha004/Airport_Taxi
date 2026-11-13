@@ -89,6 +89,12 @@ class ChangeRequestService {
     return requests.map(r => this.enrichChangeRequest(r));
   }
 
+  getRequestChangeRequests(requestId) {
+    const booking = bookingRepo.findByRequestId(requestId);
+    if (!booking) return [];
+    return this.getBookingChangeRequests(booking.bookingNumber);
+  }
+
   reviewChangeRequest(changeRequestId, decision = {}) {
     const changeReq = changeRequestRepo.findById(changeRequestId);
     if (!changeReq) {
@@ -115,14 +121,14 @@ class ChangeRequestService {
 
     // If Supplier Rejects
     if (action === 'reject') {
-      const updated = changeRequestRepo.updateDecision(
+      const updated = changeRequestRepo.rejectChangeTransaction(
         changeRequestId,
-        'rejected',
-        reason || 'Rejected by supplier'
+        booking.id,
+        reason || 'Rejected by supplier due to schedule conflict'
       );
       return {
         success: true,
-        message: 'Change request rejected. Original booking preserved.',
+        message: 'Change request rejected. Booking has been cancelled as requested delayed schedule could not be accommodated.',
         changeRequest: this.enrichChangeRequest(updated),
         booking: bookingRepo.findById(booking.id),
       };
@@ -193,9 +199,24 @@ class ChangeRequestService {
     if (!changeReq) return null;
     const newFlight = changeReq.newFlightId ? catalogService.getFlightById(changeReq.newFlightId) : null;
     const currentFlight = changeReq.currentFlightId ? catalogService.getFlightById(changeReq.currentFlightId) : null;
+    const hotel = changeReq.hotelId ? catalogService.getHotelById(changeReq.hotelId) : null;
+    const supplier = changeReq.supplierId ? catalogService.getSupplierById(changeReq.supplierId) : null;
+
+    let delayMinutes = null;
+    if (changeReq.currentPickupAt && changeReq.newPickupAt) {
+      try {
+        const curMs = new Date(changeReq.currentPickupAt.endsWith('Z') ? changeReq.currentPickupAt : changeReq.currentPickupAt + 'Z').getTime();
+        const newMs = new Date(changeReq.newPickupAt.endsWith('Z') ? changeReq.newPickupAt : changeReq.newPickupAt + 'Z').getTime();
+        delayMinutes = Math.round((newMs - curMs) / 60000);
+      } catch (e) {}
+    }
 
     return {
       ...changeReq,
+      hotel,
+      supplier,
+      delayMinutes,
+      isDelay: delayMinutes !== null && delayMinutes > 0,
       newFlight: newFlight ? {
         flight_id: newFlight.flight_id,
         flight_number: newFlight.flight_number,

@@ -12,6 +12,8 @@ import {
   FileText,
   Bell,
   MapPin,
+  XCircle,
+  Plane,
 } from 'lucide-react';
 import { catalogApi, supplierApi, changeRequestApi } from '../../api/api';
 
@@ -21,7 +23,10 @@ export default function SupplierDashboard() {
   const [suppliers, setSuppliers] = useState([]);
   const [selectedSupplierId, setSelectedSupplierId] = useState('TX-JP-01'); // Default to Sakura Cabs
   const [supplierData, setSupplierData] = useState(null);
+  const [changeRequests, setChangeRequests] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState(null);
+  const [actionSuccess, setActionSuccess] = useState(null);
   const [error, setError] = useState(null);
 
   useEffect(() => {
@@ -41,8 +46,12 @@ export default function SupplierDashboard() {
     setLoading(true);
     setError(null);
     try {
-      const res = await supplierApi.getSupplierRequests(selectedSupplierId);
-      setSupplierData(res);
+      const [supRes, chgRes] = await Promise.all([
+        supplierApi.getSupplierRequests(selectedSupplierId),
+        changeRequestApi.getSupplierChangeRequests(selectedSupplierId),
+      ]);
+      setSupplierData(supRes);
+      setChangeRequests(chgRes.data || []);
     } catch (err) {
       setError(err.response?.data?.error || err.message || 'Failed to load supplier dashboard');
     } finally {
@@ -53,6 +62,38 @@ export default function SupplierDashboard() {
   useEffect(() => {
     loadDashboardData();
   }, [selectedSupplierId]);
+
+  const handleReviewChange = async (changeRequestId, action) => {
+    const isAccept = action === 'accept';
+    const confirmPrompt = isAccept
+      ? 'Would you like to ACCEPT this flight delay update? The previous schedule will be deleted and the current delayed schedule will be accepted.'
+      : 'Would you like to REJECT this flight delay update? Because the delayed schedule cannot be accommodated, the booking will be CANCELLED and will no longer show as booked.';
+
+    if (!window.confirm(confirmPrompt)) return;
+
+    setActionLoading(`${action}-${changeRequestId}`);
+    setActionSuccess(null);
+    try {
+      await changeRequestApi.reviewChangeRequest(changeRequestId, {
+        action,
+        reason: isAccept
+          ? 'Accepted delayed schedule (Previous schedule replaced with current)'
+          : 'Rejected by supplier due to schedule conflict (Booking cancelled)',
+      });
+      setActionSuccess(
+        isAccept
+          ? 'Previous schedule deleted. Current delayed schedule successfully accepted!'
+          : 'Flight delay schedule rejected. Booking has been cancelled.'
+      );
+      await loadDashboardData();
+    } catch (err) {
+      alert(err.response?.data?.error || 'Review action failed');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const pendingChanges = changeRequests.filter((cr) => cr.status === 'pending');
 
   return (
     <div className="supplier-dashboard-container">
@@ -125,6 +166,105 @@ export default function SupplierDashboard() {
               <span>Refresh Metrics</span>
             </button>
           </div>
+
+          {actionSuccess && (
+            <div className="alert-banner alert-success" style={{ marginBottom: '1.5rem' }}>
+              <CheckCircle size={20} />
+              <span>{actionSuccess}</span>
+            </div>
+          )}
+
+          {/* Urgent Section: Flight Delay Updates Awaiting Supplier Decision */}
+          {pendingChanges.length > 0 && (
+            <div className="urgent-change-section">
+              <div className="urgent-change-header">
+                <div className="urgent-title-group">
+                  <span className="pulse-alert-dot"></span>
+                  <h2 className="urgent-title">⚡ Flight Delay Updates Awaiting Your Decision ({pendingChanges.length})</h2>
+                </div>
+                <p className="urgent-sub">
+                  Travelers on your confirmed bookings have reported delayed flight schedules. Review the updated pickup time below:
+                  <br />
+                  <strong>If accepted:</strong> The previous booking schedule will be deleted and the current delayed schedule will be accepted.
+                </p>
+              </div>
+
+              <div className="pending-changes-grid">
+                {pendingChanges.map((cr) => (
+                  <div key={cr.id} className="urgent-cr-card">
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div>
+                        <span className="request-id-badge">{cr.id}</span>
+                        <strong style={{ marginLeft: '0.5rem', fontSize: '0.95rem' }}>
+                          Booking #{cr.bookingNumber} • Traveler: {cr.travelerName}
+                        </strong>
+                      </div>
+                      <span className="status-pill status-pending">FLIGHT DELAY PENDING</span>
+                    </div>
+
+                    <div className="cr-compare-box">
+                      <div className="cr-compare-col">
+                        <span className="tag">Previous Schedule</span>
+                        <strong>{cr.currentFlight?.flight_number || cr.currentFlightId}</strong>
+                        <span>Lands: {cr.currentFlight?.arrival_local}</span>
+                        <span style={{ fontWeight: 600 }}>Pickup: {cr.currentPickupAt}</span>
+                      </div>
+
+                      <div style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--gray-400)' }}>➔</div>
+
+                      <div className="cr-compare-col">
+                        <span className="tag highlight">Current (Delayed) Schedule</span>
+                        <strong style={{ color: '#000000' }}>
+                          {cr.newFlight?.flight_number || cr.currentFlight?.flight_number || cr.currentFlightId}
+                        </strong>
+                        <span>Lands: {cr.newFlight?.arrival_local || cr.currentFlight?.arrival_local}</span>
+                        <strong style={{ color: '#000000', fontSize: '1.05rem' }}>
+                          New Pickup: {cr.newPickupAt}
+                          {cr.delayMinutes ? ` (+${cr.delayMinutes}m delay)` : ''}
+                        </strong>
+                      </div>
+                    </div>
+
+                    {cr.supplierResponse && (
+                      <div style={{ fontSize: '0.8rem', color: 'var(--gray-600)', fontStyle: 'italic' }}>
+                        Note: "{cr.supplierResponse}"
+                      </div>
+                    )}
+
+                    <div className="cr-question-box">
+                      <strong>Would you like to accept or reject?</strong>
+                      <span>If you accept: Previous schedule will be deleted and current delayed schedule will be accepted. If you reject: Because the delayed flight cannot be accommodated, the booking will be cancelled and will no longer show as booked.</span>
+                    </div>
+
+                    <div className="cr-decision-buttons">
+                      <button
+                        type="button"
+                        className="btn-danger-outline"
+                        onClick={() => handleReviewChange(cr.id, 'reject')}
+                        disabled={actionLoading !== null}
+                      >
+                        <XCircle size={16} />
+                        <span>Reject Delayed Schedule</span>
+                      </button>
+                      <button
+                        type="button"
+                        className="btn-primary"
+                        onClick={() => handleReviewChange(cr.id, 'accept')}
+                        disabled={actionLoading !== null}
+                      >
+                        {actionLoading === `accept-${cr.id}` ? (
+                          <RefreshCw size={16} className="spin" />
+                        ) : (
+                          <CheckCircle size={16} />
+                        )}
+                        <span>Accept (Delete Previous & Accept Current)</span>
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Metric Stats Cards */}
           <div className="metric-cards-grid">

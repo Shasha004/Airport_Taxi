@@ -187,7 +187,30 @@ export default function ChangeBookingPage() {
           </p>
 
           <div className="form-group">
-            <label htmlFor="newPickupInput">New Pickup Time (Local)</label>
+            <label className="quick-delay-label">
+              <Clock size={16} />
+              <span>Quick Flight Delay Presets (Adds to current pickup):</span>
+            </label>
+            <div className="delay-preset-buttons" style={{ marginBottom: '1rem' }}>
+              {[15, 30, 45, 60, 120].map((mins) => (
+                <button
+                  key={mins}
+                  type="button"
+                  className="delay-btn"
+                  onClick={() => {
+                    const base = booking?.pickupAt;
+                    if (!base) return;
+                    const ms = new Date(base.endsWith('Z') ? base : base + 'Z').getTime();
+                    const newDate = new Date(ms + mins * 60 * 1000);
+                    setNewPickupAt(newDate.toISOString().slice(0, 16));
+                  }}
+                >
+                  {mins >= 60 ? `+${mins / 60}h Delay` : `+${mins}m Delay`}
+                </button>
+              ))}
+            </div>
+
+            <label htmlFor="newPickupInput">New Scheduled Pickup Time (Local)</label>
             <input
               id="newPickupInput"
               type="datetime-local"
@@ -206,6 +229,17 @@ export default function ChangeBookingPage() {
                 </span>
               </div>
             )}
+
+            <div className="delay-notice-box" style={{ marginTop: '1rem' }}>
+              <Info size={20} style={{ flexShrink: 0 }} />
+              <div>
+                <strong>Supplier Decision Rule:</strong> When you submit, your supplier ({booking?.supplier?.name}) will receive this update with the option:
+                <br />
+                <strong>"Would you like to accept or reject?"</strong>
+                <br />
+                If accepted, the previous schedule will be deleted and the current delayed schedule will be accepted.
+              </div>
+            </div>
           </div>
         </div>
 

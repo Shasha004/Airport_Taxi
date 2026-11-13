@@ -52,8 +52,8 @@ export default function ChangeRequestsPage() {
 
   const handleReview = async (changeRequestId, action) => {
     const promptMsg = action === 'accept'
-      ? 'Are you sure you want to ACCEPT this booking change? The booking flight and pickup time will be updated.'
-      : 'Are you sure you want to REJECT this booking change? The original booking will be preserved.';
+      ? 'Are you sure you want to ACCEPT this booking change? The previous schedule will be deleted and the current delayed schedule will be accepted.'
+      : 'Are you sure you want to REJECT this delayed schedule? Because the delay cannot be accommodated, the booking will be CANCELLED and will no longer show as booked.';
 
     if (!window.confirm(promptMsg)) return;
 
@@ -61,7 +61,7 @@ export default function ChangeRequestsPage() {
     try {
       await changeRequestApi.reviewChangeRequest(changeRequestId, {
         action,
-        reason: action === 'accept' ? 'Accepted by supplier' : 'Schedule conflict or unserviceable time',
+        reason: action === 'accept' ? 'Accepted by supplier (Previous schedule replaced with current)' : 'Schedule conflict — delayed time cannot be served (Booking cancelled)',
       });
       await loadChanges();
     } catch (err) {
@@ -197,23 +197,29 @@ export default function ChangeRequestsPage() {
 
                 {/* Actions */}
                 {isPending && (
-                  <div className="cr-actions">
-                    <button
-                      className="btn-danger-outline"
-                      onClick={() => handleReview(cr.id, 'reject')}
-                      disabled={actionLoading !== null}
-                    >
-                      <XCircle size={16} />
-                      <span>Reject Change</span>
-                    </button>
-                    <button
-                      className="btn-primary"
-                      onClick={() => handleReview(cr.id, 'accept')}
-                      disabled={actionLoading !== null}
-                    >
-                      <CheckCircle size={16} />
-                      <span>Accept Change (R9)</span>
-                    </button>
+                  <div style={{ marginTop: '1rem', borderTop: '1px solid var(--border-color)', paddingTop: '1rem' }}>
+                    <div className="cr-question-box" style={{ marginBottom: '0.75rem' }}>
+                      <strong>Would you like to accept or reject this delayed schedule?</strong>
+                      <span>If you accept: The previous booking schedule will be deleted and the current delayed schedule will be accepted. If you reject: Because the delayed flight cannot be accommodated, the booking will be cancelled and will no longer show as booked.</span>
+                    </div>
+                    <div className="cr-actions">
+                      <button
+                        className="btn-danger-outline"
+                        onClick={() => handleReview(cr.id, 'reject')}
+                        disabled={actionLoading !== null}
+                      >
+                        <XCircle size={16} />
+                        <span>Reject Delayed Schedule</span>
+                      </button>
+                      <button
+                        className="btn-primary"
+                        onClick={() => handleReview(cr.id, 'accept')}
+                        disabled={actionLoading !== null}
+                      >
+                        <CheckCircle size={16} />
+                        <span>Accept (Delete Previous & Accept Current)</span>
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>
