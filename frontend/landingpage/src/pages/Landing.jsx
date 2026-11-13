@@ -9,11 +9,10 @@ import '../css/Landing.css';
 /**
  * Landing Page Component.
  *
- * 1. Intro Stage: Realistic Airplane Window (Image 1) with zero ugly overlays.
- *    Through the window aperture, the user gets a seamless sneak peek into the
- *    main page's rotating blue sports car!
- * 2. Clicking anywhere on the window zooms through the glass directly into the
- *    full-screen AirportCarWala design (Image 2).
+ * 1. Intro Stage: Airplane Window (Image 1) with clean cinematic glass portal.
+ * 2. Main Page Stage: 50 / 50 Split Layout:
+ *    - Left (50%): All text (Title, Subtitle, *SPECS table, and BOOK NOW button)
+ *    - Right (50%): Big, prominent 3D rotating blue sports car video!
  */
 function Landing() {
   // Controls the zoom transition from airplane window to full-screen main page
@@ -33,33 +32,38 @@ function Landing() {
     {
       production: '2023 - Present',
       maxSpeed: '325 km/h',
-      engine: '4.0L Twin-Turbo V8'
+      engine: '4.0L Twin-Turbo V8',
+      carClass: 'SPORTS SEDAN'
     },
     {
       production: '2024 - Present',
       maxSpeed: '335 km/h',
-      engine: '4.4L TwinPower V8'
+      engine: '4.4L TwinPower V8',
+      carClass: 'LUXURY SEDAN'
     },
     {
       production: '2024 - Present',
       maxSpeed: '340 km/h',
-      engine: '5.2L V10'
+      engine: '5.2L V10',
+      carClass: 'SUPERCAR / VIP'
     },
     {
       production: '2025 - Planned',
       maxSpeed: '350 km/h',
-      engine: '6.5L Hybrid V12'
+      engine: '6.5L Hybrid V12',
+      carClass: 'HYPERCAR'
     },
     {
       production: '2024 - Present',
       maxSpeed: '310 km/h',
-      engine: 'Electric Dual-Motor'
+      engine: 'Electric Dual-Motor',
+      carClass: 'PERFORMANCE EV'
     }
   ];
 
   const currentSpecs = specsList[activeSlide];
 
-  // Keep both videos playing smoothly
+  // Keep videos playing smoothly
   useEffect(() => {
     if (portalVideoRef.current) {
       portalVideoRef.current.play().catch(() => {});
@@ -67,15 +71,13 @@ function Landing() {
     if (isWindowZoomed && mainVideoRef.current) {
       mainVideoRef.current.play().catch(() => {});
     }
-  }, [isWindowZoomed]);
+  }, [isWindowZoomed, activeSlide]);
 
   return (
     <div className={`landing-viewport ${isWindowZoomed ? 'landing-viewport--zoomed' : ''}`}>
       {/* ====================================================================
           STAGE 1: AIRPLANE WINDOW INTRO (IMAGE 1)
-          Pure, realistic cinematic window with NO ugly popups or boxes.
-          Inside the glass aperture, the user sees a small preview of the
-          rotating blue sports car in the lounge.
+          Clean cinematic airplane window with live glass portal into the car.
           ==================================================================== */}
       <div 
         className={`window-portal ${isWindowZoomed ? 'window-portal--zoomed-in' : ''}`}
@@ -90,7 +92,7 @@ function Landing() {
           />
         </div>
 
-        {/* Small live view of the main page rotating car through the window glass */}
+        {/* Small live view through the window glass */}
         <div className="window-portal__glass-aperture">
           <video
             ref={portalVideoRef}
@@ -101,29 +103,16 @@ function Landing() {
             playsInline
             className="window-portal__glass-video"
           />
-          {/* Realistic curved glass sheen overlay */}
           <div className="window-portal__glass-sheen"></div>
         </div>
       </div>
 
       {/* ====================================================================
-          STAGE 2: MAIN PAGE DESIGN (EXACT 1:1 RECREATION OF IMAGE 2)
-          Centered 3D Rotating Blue Sports Car with full-bleed silk background.
+          STAGE 2: MAIN PAGE DESIGN (50 / 50 SPLIT LAYOUT)
+          Left 50%: All Text & Specs
+          Right 50%: Big 3D Rotating Blue Sports Car Video
           ==================================================================== */}
       <main className={`main-stage ${isWindowZoomed ? 'main-stage--active' : ''}`}>
-        {/* Full-bleed rotating car video layer */}
-        <div className="main-stage__video-wrap">
-          <video
-            ref={mainVideoRef}
-            src={rotatingCarVideo}
-            autoPlay
-            loop
-            muted
-            playsInline
-            className="main-stage__video"
-          />
-        </div>
-
         {/* Top Navbar */}
         <Navbar 
           onBookNowClick={() => setIsBookingOpen(true)}
@@ -131,33 +120,24 @@ function Landing() {
           isWindowZoomed={isWindowZoomed}
         />
 
-        {/* Hero Overlay Grid (Left typography, Right *SPECS) */}
-        <div className="hero-overlay">
-          <div className="hero-overlay__inner">
-            {/* Left Column: LUXURY CAR RENTALS */}
-            <div className="hero-overlay__left">
-              <h1 className="hero-title">
+        {/* 50 / 50 Hero Split Grid */}
+        <div className="hero-split">
+          <div className="hero-split__container">
+            {/* ================= LEFT 50%: ALL TEXT & SPECS ================= */}
+            <div className="hero-split__left">
+              <span className="hero-split__eyebrow">LUXURY CAR RENTALS</span>
+              
+              <h1 className="hero-split__title">
                 LUXURY CAR<br />
                 RENTALS
               </h1>
-              <p className="hero-subtitle">
-                FIND THE PERFECT CAR<br />
-                FOR YOUR NEXT AIRPORT TRIP!
-              </p>
-              
-              <button 
-                type="button" 
-                className="hero-btn-book"
-                onClick={() => setIsBookingOpen(true)}
-              >
-                <span>BOOK NOW</span>
-                <span className="hero-btn-arrow">&#9654;</span>
-              </button>
-            </div>
 
-            {/* Right Column: *SPECS */}
-            <div className="hero-overlay__right">
-              <div className="specs-box">
+              <p className="hero-split__subtitle">
+                FIND THE PERFECT CAR FOR YOUR NEXT AIRPORT TRIP!
+              </p>
+
+              {/* Specs Block integrated on the left */}
+              <div className="hero-split__specs-box">
                 <h2 className="specs-title">*SPECS</h2>
                 <div className="specs-table">
                   <div className="specs-row">
@@ -172,7 +152,41 @@ function Landing() {
                     <span className="specs-label">Engine</span>
                     <span className="specs-val">{currentSpecs.engine}</span>
                   </div>
+                  <div className="specs-row">
+                    <span className="specs-label">Class</span>
+                    <span className="specs-val">{currentSpecs.carClass}</span>
+                  </div>
                 </div>
+              </div>
+
+              {/* BOOK NOW ▶ Button */}
+              <div className="hero-split__actions">
+                <button 
+                  type="button" 
+                  className="hero-btn-book"
+                  onClick={() => setIsBookingOpen(true)}
+                >
+                  <span>BOOK NOW</span>
+                  <span className="hero-btn-arrow">&#9654;</span>
+                </button>
+              </div>
+            </div>
+
+            {/* ================= RIGHT 50%: BIG ROTATING CAR VIDEO ================= */}
+            <div className="hero-split__right">
+              <div className="car-big-video-card">
+                <video
+                  ref={mainVideoRef}
+                  src={rotatingCarVideo}
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  className="car-big-video"
+                />
+                {/* High-tech cyan glow ring & floor shadow */}
+                <div className="car-big-video__glow"></div>
+                <div className="car-big-video__shadow"></div>
               </div>
             </div>
           </div>
